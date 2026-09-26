@@ -1,0 +1,2998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Digitax Solutions - Accounting & Compliance Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        header p {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .user-info {
+            text-align: right;
+        }
+        .user-info p {
+            font-size: 14px;
+            margin: 3px 0;
+        }
+        .user-role {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        nav button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+        nav button:hover {
+            background-color: #cbd5e1;
+        }
+        nav button.active {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        nav button .shortcut-letter {
+            font-weight: 800;
+            text-decoration: underline;
+        }
+        /* One-shot shimmer sweep, played on freshly-opened tab content (see .tab-shimmer usage). */
+        @keyframes shimmerSweep {
+            to { transform: translateX(220%); }
+        }
+        .tab-content {
+            animation: fadeInTab 0.3s ease;
+        }
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: none; }
+        }
+        .tab-shimmer .card,
+        .tab-shimmer .metric-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .tab-shimmer .card::after,
+        .tab-shimmer .metric-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 60%; height: 100%;
+            background: linear-gradient(110deg, transparent 10%, rgba(255,255,255,0.55) 50%, transparent 90%);
+            transform: translateX(-150%);
+            animation: shimmerSweep 0.9s ease-out;
+            pointer-events: none;
+        }
+        .logout-btn {
+            background-color: #fecaca !important;
+            color: #991b1b !important;
+            font-size: 12px;
+            padding: 6px 12px !important;
+        }
+        .logout-btn:hover {
+            background-color: #fca5a5 !important;
+        }
+        .main-content {
+            padding: 32px 0;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 24px;
+        }
+        .login-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-box h1 {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .login-box p {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .login-btn:hover {
+            background-color: #1d4ed8;
+        }
+        .demo-creds {
+            background-color: #f1f5f9;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        .demo-creds p {
+            margin: 4px 0;
+            color: #475569;
+        }
+        .demo-creds strong {
+            font-weight: 600;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid;
+        }
+        .metric-card.blue {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+        .metric-card.orange {
+            background-color: #fff7ed;
+            border-color: #fed7aa;
+            color: #92400e;
+        }
+        .metric-card.green {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #15803d;
+        }
+        .metric-card p {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+        .btn-secondary {
+            background-color: #1e293b;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #0f172a;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-grid input, .form-grid select {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table thead {
+            background-color: #f1f5f9;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+        }
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-orange {
+            background-color: #fed7aa;
+            color: #92400e;
+        }
+        .badge-green {
+            background-color: #bbf7d0;
+            color: #15803d;
+        }
+        .badge-blue {
+            background-color: #bfdbfe;
+            color: #1e40af;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.2);
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .select-dropdown {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+        .empty-state p {
+            font-size: 14px;
+        }
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .chart-box {
+            position: relative;
+            height: 280px;
+        }
+        .gst-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .invoice-modal-content {
+            max-width: 760px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .invoice-doc {
+            font-size: 13px;
+            color: #1e293b;
+        }
+        .invoice-doc table {
+            font-size: 12px;
+        }
+        .invoice-doc .inv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #1e293b;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+        .invoice-doc .inv-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            letter-spacing: 1px;
+            margin: 12px 0;
+        }
+        .invoice-doc .inv-parties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .invoice-doc .inv-parties .box {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .invoice-doc .inv-totals {
+            margin-top: 8px;
+            width: 100%;
+            max-width: 320px;
+            margin-left: auto;
+        }
+        .invoice-doc .inv-totals div {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        .invoice-doc .inv-footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #475569;
+        }
+        .settings-toggle {
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            text-decoration: underline;
+            padding: 0;
+        }
+        @media (max-width: 768px) {
+            nav {
+                gap: 4px;
+            }
+            nav button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .action-bar {
+                flex-direction: column;
+            }
+            .action-bar button {
+                width: 100%;
+            }
+            table {
+                font-size: 12px;
+            }
+            table th, table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// Application State
+let state = {
+    currentUser: null,
+    currentPage: 'login',
+    users: [],
+    clients: [],
+    vendors: [],
+    transactions: [],
+    bankEntries: [],
+    company: null,
+    showUserModal: false,
+    viewInvoiceId: null,
+    dashboardFilter: { periodType: 'monthly', fy: null },
+    bankingSubTab: 'receipts',
+    editingSalesId: null,
+    editingPurchaseId: null,
+    editingReceiptId: null,
+    editingPaymentId: null
+};
+
+// GST rate slabs (Schedule rates under CGST/SGST/IGST Act)
+const GST_RATES = [0, 0.25, 3, 5, 12, 18, 28];
+
+// Indian States & UTs with GST state codes (for CGST+SGST vs IGST determination per Sec 7/8 IGST Act)
+const INDIAN_STATES = [
+    { code: '27', name: 'Maharashtra' }, { code: '07', name: 'Delhi' }, { code: '29', name: 'Karnataka' },
+    { code: '33', name: 'Tamil Nadu' }, { code: '24', name: 'Gujarat' }, { code: '09', name: 'Uttar Pradesh' },
+    { code: '19', name: 'West Bengal' }, { code: '06', name: 'Haryana' }, { code: '08', name: 'Rajasthan' },
+    { code: '23', name: 'Madhya Pradesh' }, { code: '32', name: 'Kerala' }, { code: '36', name: 'Telangana' },
+    { code: '37', name: 'Andhra Pradesh' }, { code: '03', name: 'Punjab' }, { code: '05', name: 'Uttarakhand' },
+    { code: '22', name: 'Chhattisgarh' }, { code: '20', name: 'Jharkhand' }, { code: '21', name: 'Odisha' },
+    { code: '02', name: 'Himachal Pradesh' }, { code: '01', name: 'Jammu & Kashmir' }, { code: '18', name: 'Assam' },
+    { code: '30', name: 'Goa' }, { code: '04', name: 'Chandigarh' }, { code: '10', name: 'Bihar' }
+];
+
+function defaultCompany() {
+    return {
+        name: 'Shree Digitax Solutions',
+        address: '',
+        gstin: '',
+        pan: '',
+        state: 'Maharashtra',
+        stateCode: '27',
+        email: '',
+        phone: '',
+        bankName: '',
+        bankAccount: '',
+        bankIFSC: '',
+        logoDataUrl: ''
+    };
+}
+
+// Determine CGST+SGST (intra-state) vs IGST (inter-state) per Sec 7/8 IGST Act, 2017
+function computeGstSplit(taxableValue, ratePercent, clientStateCode, companyStateCode) {
+    const tv = parseFloat(taxableValue) || 0;
+    const rate = parseFloat(ratePercent) || 0;
+    const gstAmt = round2(tv * rate / 100);
+    const intraState = clientStateCode && companyStateCode && clientStateCode === companyStateCode;
+    if (intraState) {
+        return { cgst: round2(gstAmt / 2), sgst: round2(gstAmt / 2), igst: 0, gstAmount: gstAmt, intraState: true };
+    }
+    return { cgst: 0, sgst: 0, igst: gstAmt, gstAmount: gstAmt, intraState: false };
+}
+
+function round2(n) {
+    return Math.round((parseFloat(n) || 0) * 100) / 100;
+}
+
+// --- WhatsApp sharing helpers (used by Invoice Generation and Ledger tabs) ---
+// Normalizes a stored phone number into a WhatsApp-callable number (assumes India +91
+// when a bare 10-digit number is stored, since that's how numbers are entered in Clients/Vendors).
+function formatWhatsAppNumber(raw) {
+    if (!raw) return '';
+    let digits = String(raw).replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.length === 10) digits = '91' + digits;
+    else if (digits.length === 11 && digits.startsWith('0')) digits = '91' + digits.slice(1);
+    return digits;
+}
+
+function openWhatsAppShare(phoneRaw, message, missingLabel) {
+    const phone = formatWhatsAppNumber(phoneRaw);
+    if (!phone) {
+        alert(`No WhatsApp/phone number registered for this ${missingLabel}. Add one under ${missingLabel === 'vendor' ? 'Vendors' : 'Clients'}.`);
+        return;
+    }
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+// --- Financial Year helpers (Indian FY: April to March) ---
+// Earliest FY the dashboard filter allows, per requirement.
+const DASHBOARD_MIN_FY_START = 2026;
+
+function getFYLabel(startYear) {
+    return `FY${startYear}-${String((startYear + 1) % 100).padStart(2, '0')}`;
+}
+
+function getFYStartYear(dateStr) {
+    if (!dateStr) return DASHBOARD_MIN_FY_START;
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1; // 1-12
+    return m >= 4 ? y : y - 1;
+}
+
+// List of FY start-years to offer in the dashboard filter: always starts at
+// DASHBOARD_MIN_FY_START and extends to cover today's FY and any transaction data.
+function getAvailableFYs() {
+    let maxFYStart = Math.max(DASHBOARD_MIN_FY_START, getFYStartYear(new Date().toISOString().split('T')[0]));
+    state.transactions.forEach(t => {
+        if (t.date) {
+            const s = getFYStartYear(t.date);
+            if (s > maxFYStart) maxFYStart = s;
+        }
+    });
+    const fys = [];
+    for (let y = DASHBOARD_MIN_FY_START; y <= maxFYStart; y++) fys.push(y);
+    return fys;
+}
+
+function defaultDashboardFY() {
+    const today = getFYStartYear(new Date().toISOString().split('T')[0]);
+    return Math.max(DASHBOARD_MIN_FY_START, today);
+}
+
+// Sum a transaction field across a date-key predicate for a given type.
+function sumTransactions(type, matchFn) {
+    return state.transactions
+        .filter(t => t.type === type && matchFn(t.date || ''))
+        .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+}
+
+function getMonthlyTrendData(fyStart) {
+    const labels = [];
+    const salesData = [];
+    const purchaseData = [];
+    for (let i = 0; i < 12; i++) {
+        const monthIndex0 = (3 + i) % 12; // April = index 3 (Jan=0)
+        const year = fyStart + Math.floor((3 + i) / 12);
+        const month = monthIndex0 + 1;
+        const key = `${year}-${String(month).padStart(2, '0')}`;
+        const label = new Date(year, month - 1, 1).toLocaleString('en-IN', { month: 'short' }) + " '" + String(year).slice(-2);
+        labels.push(label);
+        salesData.push(round2(sumTransactions('sales', d => d.slice(0, 7) === key)));
+        purchaseData.push(round2(sumTransactions('purchase', d => d.slice(0, 7) === key)));
+    }
+    return { labels, salesData, purchaseData };
+}
+
+function getQuarterlyTrendData(fyStart) {
+    const quarters = [
+        { label: 'Apr-Jun', months: [4, 5, 6], yearOffset: 0 },
+        { label: 'Jul-Sep', months: [7, 8, 9], yearOffset: 0 },
+        { label: 'Oct-Dec', months: [10, 11, 12], yearOffset: 0 },
+        { label: 'Jan-Mar', months: [1, 2, 3], yearOffset: 1 }
+    ];
+    const labels = [];
+    const salesData = [];
+    const purchaseData = [];
+    quarters.forEach(q => {
+        const year = fyStart + q.yearOffset;
+        const keys = q.months.map(m => `${year}-${String(m).padStart(2, '0')}`);
+        labels.push(`${q.label} ${year}`);
+        salesData.push(round2(sumTransactions('sales', d => keys.includes(d.slice(0, 7)))));
+        purchaseData.push(round2(sumTransactions('purchase', d => keys.includes(d.slice(0, 7)))));
+    });
+    return { labels, salesData, purchaseData };
+}
+
+function getYearlyTrendData() {
+    const fys = getAvailableFYs();
+    const labels = fys.map(y => getFYLabel(y));
+    const salesData = fys.map(y => round2(sumTransactions('sales', d => getFYStartYear(d) === y)));
+    const purchaseData = fys.map(y => round2(sumTransactions('purchase', d => getFYStartYear(d) === y)));
+    return { labels, salesData, purchaseData };
+}
+
+// --- Banking helpers: link receipts/payments back to sales/purchase invoices ---
+function invoiceReceivedAmount(transId) {
+    return (state.bankEntries || [])
+        .filter(b => b.type === 'receipt' && b.linkedTransactionId === transId)
+        .reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+}
+
+function invoicePaidAmount(transId) {
+    return (state.bankEntries || [])
+        .filter(b => b.type === 'payment' && b.linkedTransactionId === transId)
+        .reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+}
+
+// Net outstanding balance for a client: Sales invoices debit the client (they owe us),
+// Purchase invoices from that party credit them (we owe them). Positive = Dr (receivable).
+function clientBalance(clientId) {
+    return state.transactions
+        .filter(t => t.clientId === clientId)
+        .reduce((bal, t) => bal + (t.type === 'sales' ? (parseFloat(t.amount) || 0) : -(parseFloat(t.amount) || 0)), 0);
+}
+
+// Net amount payable to a vendor: sum of purchase invoices linked to them (Cr = we owe them).
+function vendorBalance(vendorId) {
+    return state.transactions
+        .filter(t => t.vendorId === vendorId && t.type === 'purchase')
+        .reduce((bal, t) => bal + (parseFloat(t.amount) || 0), 0);
+}
+
+// Basic Indian numbering (Rupees) amount-to-words for invoice printing
+function amountToWords(num) {
+    num = Math.round(parseFloat(num) || 0);
+    if (num === 0) return 'Zero Rupees Only';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+        'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    function twoDigits(n) {
+        if (n < 20) return ones[n];
+        return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    }
+    function threeDigits(n) {
+        if (n >= 100) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + twoDigits(n % 100) : '');
+        return twoDigits(n);
+    }
+    let result = '';
+    const crore = Math.floor(num / 10000000); num %= 10000000;
+    const lakh = Math.floor(num / 100000); num %= 100000;
+    const thousand = Math.floor(num / 1000); num %= 1000;
+    const hundred = num;
+    if (crore) result += threeDigits(crore) + ' Crore ';
+    if (lakh) result += threeDigits(lakh) + ' Lakh ';
+    if (thousand) result += threeDigits(thousand) + ' Thousand ';
+    if (hundred) result += threeDigits(hundred);
+    return result.trim() + ' Rupees Only';
+}
+
+// Initialize App
+function initApp() {
+    loadDataFromStorage();
+    if (!state.users.length) {
+        // Default administrator account. Not shown on the login screen for security;
+        // share these credentials with the first admin out-of-band.
+        state.users = [
+            {
+                id: 'user1',
+                name: 'Admin User',
+                email: 'admin@shreedigitax.com',
+                password: 'admin123',
+                role: 'admin'
+            }
+        ];
+        saveDataToStorage();
+    }
+    if (!state.company) {
+        state.company = defaultCompany();
+        saveDataToStorage();
+    }
+    if (!state.dashboardFilter || !state.dashboardFilter.fy) {
+        state.dashboardFilter = { periodType: 'monthly', fy: defaultDashboardFY() };
+    }
+    renderApp();
+}
+
+// Storage Management
+function saveDataToStorage() {
+    localStorage.setItem('sdtx_users', JSON.stringify(state.users));
+    localStorage.setItem('sdtx_clients', JSON.stringify(state.clients));
+    localStorage.setItem('sdtx_vendors', JSON.stringify(state.vendors));
+    localStorage.setItem('sdtx_transactions', JSON.stringify(state.transactions));
+    localStorage.setItem('sdtx_company', JSON.stringify(state.company));
+    localStorage.setItem('sdtx_bank_entries', JSON.stringify(state.bankEntries));
+}
+
+function loadDataFromStorage() {
+    const users = localStorage.getItem('sdtx_users');
+    const clients = localStorage.getItem('sdtx_clients');
+    const vendors = localStorage.getItem('sdtx_vendors');
+    const transactions = localStorage.getItem('sdtx_transactions');
+    const company = localStorage.getItem('sdtx_company');
+    const bankEntries = localStorage.getItem('sdtx_bank_entries');
+    
+    if (users) state.users = JSON.parse(users);
+    if (clients) state.clients = JSON.parse(clients);
+    if (vendors) state.vendors = JSON.parse(vendors);
+    if (transactions) state.transactions = JSON.parse(transactions);
+    if (company) state.company = JSON.parse(company);
+    if (bankEntries) state.bankEntries = JSON.parse(bankEntries);
+}
+
+// Login Handler
+function handleLogin(email, password) {
+    const user = state.users.find(u => u.email === email && u.password === password);
+    if (user) {
+        state.currentUser = user;
+        state.currentPage = 'dashboard';
+        state.animateTabSwitch = true;
+        renderApp();
+    } else {
+        alert('Invalid email or password');
+    }
+}
+
+// Logout Handler
+function handleLogout() {
+    state.currentUser = null;
+    state.currentPage = 'login';
+    renderApp();
+}
+
+// Page Navigation
+function goToPage(page) {
+    state.currentPage = page;
+    state.animateTabSwitch = true;
+    renderApp();
+}
+
+// Alt+key tab shortcuts (see the bolded/underlined letter in each nav button).
+document.addEventListener('keydown', function(e) {
+    if (!e.altKey || e.ctrlKey || e.metaKey || !state.currentUser) return;
+    const shortcuts = { d: 'dashboard', c: 'clients', v: 'vendors', p: 'purchase', s: 'sales', i: 'invoices', l: 'ledger', b: 'banking', u: 'users', t: 'settings' };
+    const page = shortcuts[e.key.toLowerCase()];
+    if (!page) return;
+    if ((page === 'users' || page === 'settings') && state.currentUser.role !== 'admin') return;
+    e.preventDefault();
+    goToPage(page);
+});
+
+// Add Client
+function addClient(data) {
+    const client = {
+        id: 'client_' + Date.now(),
+        ...data,
+        createdDate: new Date().toISOString().split('T')[0]
+    };
+    state.clients.push(client);
+    saveDataToStorage();
+    alert('Client added successfully!');
+    renderApp();
+}
+
+// Add Vendor/Supplier — kept in a separate list from Clients so a party
+// created for Purchase entries never shows up in the Sales customer dropdown, and vice versa.
+function addVendor(data) {
+    const vendor = {
+        id: 'vendor_' + Date.now(),
+        ...data,
+        createdDate: new Date().toISOString().split('T')[0]
+    };
+    state.vendors.push(vendor);
+    saveDataToStorage();
+    alert('Vendor added successfully!');
+    renderApp();
+}
+
+// Add Transaction
+function addTransaction(data) {
+    const transaction = {
+        id: 'trans_' + Date.now(),
+        ...data,
+        date: data.date || new Date().toISOString().split('T')[0],
+        userId: state.currentUser.id
+    };
+    state.transactions.push(transaction);
+    saveDataToStorage();
+    alert('Transaction recorded successfully!');
+    renderApp();
+}
+
+// Add User
+function addUser(data) {
+    if (!data.name || !data.email || !data.password) {
+        alert('All fields are required');
+        return;
+    }
+    const newUser = {
+        id: 'user_' + Date.now(),
+        ...data
+    };
+    state.users.push(newUser);
+    saveDataToStorage();
+    state.showUserModal = false;
+    alert('User created: ' + data.email);
+    renderApp();
+}
+
+// Export to Excel (Simple CSV)
+function exportData(data, filename) {
+    if (!data || data.length === 0) {
+        alert('No data to export');
+        return;
+    }
+    
+    const headers = Object.keys(data[0]);
+    const csv = [headers.join(','), ...data.map(row => headers.map(h => {
+        const val = row[h] || '';
+        return typeof val === 'string' && val.includes(',') ? `"${val}"` : val;
+    }).join(','))].join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename + '_' + Date.now() + '.csv';
+    a.click();
+}
+
+// Remove User
+function removeUser(userId) {
+    if (confirm('Remove this user?')) {
+        state.users = state.users.filter(u => u.id !== userId);
+        saveDataToStorage();
+        renderApp();
+    }
+}
+
+// Render Main App
+function renderApp() {
+    const app = document.getElementById('app');
+    
+    if (!state.currentUser) {
+        app.innerHTML = renderLoginPage();
+    } else {
+        app.innerHTML = renderDashboard();
+    }
+}
+
+// Login Page HTML
+function renderLoginPage() {
+    return `
+        <div class="login-page">
+            <div class="login-box">
+                <h1>Shree Digitax Solutions</h1>
+                <p>Accounting & Compliance Manager</p>
+                <form onsubmit="handleLoginForm(event)" autocomplete="off">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="login_email" autocomplete="off" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="login_password" autocomplete="new-password" required>
+                    </div>
+                    <button type="submit" class="login-btn">Sign In</button>
+                </form>
+            </div>
+        </div>
+    `;
+}
+
+function handleLoginForm(e) {
+    e.preventDefault();
+    const email = document.getElementById('login_email').value;
+    const password = document.getElementById('login_password').value;
+    handleLogin(email, password);
+}
+
+// Dashboard
+function renderDashboard() {
+    const totalClients = state.clients.length;
+    const totalPurchases = state.transactions.filter(t => t.type === 'purchase').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const totalSales = state.transactions.filter(t => t.type === 'sales').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    // Consumed once per full render: true right after login or a tab switch, so the shimmer
+    // plays on open but doesn't replay on every incidental re-render inside the same tab.
+    const justSwitchedTab = !!state.animateTabSwitch;
+    state.animateTabSwitch = false;
+    
+    const pages = {
+        dashboard: renderDashboardPage(),
+        clients: renderClientsPage(),
+        vendors: renderVendorsPage(),
+        purchase: renderPurchasePage(),
+        sales: renderSalesPage(),
+        invoices: renderInvoicesPage(),
+        ledger: renderLedgerPage(),
+        banking: renderBankingPage(),
+        users: renderUsersPage(),
+        settings: renderSettingsPage()
+    };
+    
+    return `
+        <header>
+            <div class="container">
+                <div class="header-top">
+                    <div>
+                        <h1>Shree Digitax Solutions</h1>
+                        <p>Tax Consultancy & Compliance</p>
+                    </div>
+                    <div class="user-info">
+                        <p><strong>${state.currentUser.name}</strong></p>
+                        <p class="user-role">${state.currentUser.role === 'admin' ? 'Administrator' : 'Operator'}</p>
+                        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                    </div>
+                </div>
+                <nav>
+                    ${renderNavButtons()}
+                </nav>
+            </div>
+        </header>
+        <div class="container main-content tab-content ${justSwitchedTab ? 'tab-shimmer' : ''}">
+            ${pages[state.currentPage] || pages.dashboard}
+            ${state.showUserModal && state.currentUser.role === 'admin' ? renderUserModal() : ''}
+        </div>
+    `;
+}
+
+function renderNavButtons() {
+    const buttons = [
+        { label: 'Dashboard', page: 'dashboard', key: 'd' },
+        { label: 'Clients', page: 'clients', key: 'c' },
+        { label: 'Vendors', page: 'vendors', key: 'v' },
+        { label: 'Purchase', page: 'purchase', key: 'p' },
+        { label: 'Sales', page: 'sales', key: 's' },
+        { label: 'Invoices', page: 'invoices', key: 'i' },
+        { label: 'Ledger', page: 'ledger', key: 'l' },
+        { label: 'Banking', page: 'banking', key: 'b' },
+        ...(state.currentUser.role === 'admin' ? [{ label: 'Users', page: 'users', key: 'u' }, { label: 'Settings', page: 'settings', key: 't' }] : [])
+    ];
+    
+    return buttons.map(btn => {
+        const keyIndex = btn.label.toLowerCase().indexOf(btn.key);
+        const labelHtml = keyIndex === -1 ? btn.label
+            : btn.label.slice(0, keyIndex) + `<span class="shortcut-letter">${btn.label[keyIndex]}</span>` + btn.label.slice(keyIndex + 1);
+        return `
+        <button onclick="goToPage('${btn.page}')" accesskey="${btn.key}" title="Alt + ${btn.key.toUpperCase()}" class="${state.currentPage === btn.page ? 'active' : ''}">
+            ${labelHtml}
+        </button>
+    `;
+    }).join('');
+}
+
+function renderDashboardPage() {
+    const sales = state.transactions.filter(t => t.type === 'sales');
+    const purchases = state.transactions.filter(t => t.type === 'purchase');
+    const totalPurchases = purchases.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const totalSales = sales.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const outputGst = sales.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
+    const itc = purchases.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
+    const netGstPayable = round2(outputGst - itc);
+    const recent = state.transactions.slice(-5).reverse();
+    
+    return `
+        <h2 class="page-title">Dashboard</h2>
+        <div class="metrics">
+            <div class="metric-card blue">
+                <p>Active Clients</p>
+                <div class="value">${state.clients.length}</div>
+            </div>
+            <div class="metric-card orange">
+                <p>Total Purchases</p>
+                <div class="value">₹${totalPurchases.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+            </div>
+            <div class="metric-card green">
+                <p>Total Sales</p>
+                <div class="value">₹${totalSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+            </div>
+        </div>
+
+        <div class="gst-summary">
+            <div class="metric-card green">
+                <p>Output GST (on Sales)</p>
+                <div class="value">₹${outputGst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div class="metric-card orange">
+                <p>Input Tax Credit (on Purchases)</p>
+                <div class="value">₹${itc.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div class="metric-card ${netGstPayable >= 0 ? 'blue' : 'green'}">
+                <p>${netGstPayable >= 0 ? 'Net GST Payable' : 'Net ITC Carried Forward'}</p>
+                <div class="value">₹${Math.abs(netGstPayable).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <h3 style="font-size: 16px;">Sales vs Purchases Trend</h3>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <select id="dash_period_type" class="select-dropdown" style="width: auto;" onchange="updateDashboardFilter()">
+                        <option value="monthly" ${state.dashboardFilter.periodType === 'monthly' ? 'selected' : ''}>Monthly (Apr-Mar)</option>
+                        <option value="quarterly" ${state.dashboardFilter.periodType === 'quarterly' ? 'selected' : ''}>Quarterly</option>
+                        <option value="yearly" ${state.dashboardFilter.periodType === 'yearly' ? 'selected' : ''}>Yearly</option>
+                    </select>
+                    <select id="dash_period_fy" class="select-dropdown" style="width: auto; ${state.dashboardFilter.periodType === 'yearly' ? 'display: none;' : ''}" onchange="updateDashboardFilter()">
+                        ${getAvailableFYs().map(y => `<option value="${y}" ${y === state.dashboardFilter.fy ? 'selected' : ''}>${getFYLabel(y)}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div class="chart-box" style="height: 360px;">${renderTrendChartSVG(getTrendData(state.dashboardFilter))}</div>
+        </div>
+        
+        <div class="card">
+            <h3 style="margin-bottom: 16px; font-size: 18px;">Recent Transactions</h3>
+            ${recent.length === 0 ? '<p style="color: #64748b;">No transactions yet</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Reference</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recent.map(t => `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td><span class="badge ${t.type === 'purchase' ? 'badge-orange' : 'badge-green'}">${t.type === 'purchase' ? 'Purchase' : 'Sales'}</span></td>
+                                <td>${t.reference || t.invoiceNo || '-'}</td>
+                                <td style="text-align: right;">₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+    `;
+}
+
+// Handle the dashboard's period-type / financial-year filter controls.
+function updateDashboardFilter() {
+    const typeEl = document.getElementById('dash_period_type');
+    const fyEl = document.getElementById('dash_period_fy');
+    const type = typeEl ? typeEl.value : state.dashboardFilter.periodType;
+    const fy = fyEl ? parseInt(fyEl.value, 10) : state.dashboardFilter.fy;
+    state.dashboardFilter = { periodType: type, fy: fy || defaultDashboardFY() };
+    renderApp();
+}
+
+function getTrendData(filter) {
+    filter = filter || { periodType: 'monthly', fy: defaultDashboardFY() };
+    if (filter.periodType === 'quarterly') return getQuarterlyTrendData(filter.fy);
+    if (filter.periodType === 'yearly') return getYearlyTrendData();
+    return getMonthlyTrendData(filter.fy);
+}
+
+// Round a value up to a visually clean axis maximum (1/2/5 x 10^n).
+function niceCeiling(val) {
+    if (!val || val <= 0) return 10;
+    const exp = Math.floor(Math.log10(val));
+    const base = Math.pow(10, exp);
+    const fraction = val / base;
+    let niceFraction;
+    if (fraction <= 1) niceFraction = 1;
+    else if (fraction <= 2) niceFraction = 2;
+    else if (fraction <= 5) niceFraction = 5;
+    else niceFraction = 10;
+    return niceFraction * base;
+}
+
+// Compact Indian-style amount label for axis ticks (k / L / Cr).
+function formatCompactINR(v) {
+    const abs = Math.abs(v);
+    if (abs >= 10000000) return (v / 10000000).toFixed(1).replace(/\.0$/, '') + 'Cr';
+    if (abs >= 100000) return (v / 100000).toFixed(1).replace(/\.0$/, '') + 'L';
+    if (abs >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return Math.round(v).toString();
+}
+
+// Render the Sales vs Purchases trend as a self-contained inline SVG line chart.
+// Drawn by hand (no external charting library) so it always renders, including
+// when this file is opened locally (file://) with no internet access.
+function renderTrendChartSVG(data) {
+    const width = 900, height = 340;
+    const paddingLeft = 64, paddingRight = 20, paddingTop = 16, paddingBottom = 44;
+    const chartWidth = width - paddingLeft - paddingRight;
+    const chartHeight = height - paddingTop - paddingBottom;
+    const n = data.labels.length;
+    const allValues = [...data.salesData, ...data.purchaseData];
+    const maxVal = Math.max(0, ...allValues);
+    const niceMax = niceCeiling(maxVal);
+
+    if (maxVal === 0) {
+        return `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#94a3b8; font-size:14px;">No sales or purchase data for this period yet</div>`;
+    }
+
+    const xStep = n > 1 ? chartWidth / (n - 1) : 0;
+    const xFor = i => paddingLeft + (n > 1 ? i * xStep : chartWidth / 2);
+    const yFor = v => paddingTop + chartHeight - (v / niceMax) * chartHeight;
+
+    const gridLines = 5;
+    let gridSvg = '';
+    for (let g = 0; g <= gridLines; g++) {
+        const v = (niceMax / gridLines) * g;
+        const y = yFor(v);
+        gridSvg += `<line x1="${paddingLeft}" y1="${y.toFixed(1)}" x2="${width - paddingRight}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" />`;
+        gridSvg += `<text x="${paddingLeft - 8}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#64748b" text-anchor="end">₹${formatCompactINR(v)}</text>`;
+    }
+
+    let xLabelsSvg = '';
+    data.labels.forEach((label, i) => {
+        xLabelsSvg += `<text x="${xFor(i).toFixed(1)}" y="${height - paddingBottom + 20}" font-size="11" fill="#64748b" text-anchor="middle">${label}</text>`;
+    });
+
+    const pathFor = values => values.map((v, i) => `${i === 0 ? 'M' : 'L'} ${xFor(i).toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
+    const pointsFor = (values, color) => values.map((v, i) => `<circle cx="${xFor(i).toFixed(1)}" cy="${yFor(v).toFixed(1)}" r="4" fill="${color}"><title>${data.labels[i]}: ₹${v.toLocaleString('en-IN')}</title></circle>`).join('');
+
+    return `
+        <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: calc(100% - 26px);" preserveAspectRatio="xMidYMid meet">
+            ${gridSvg}
+            <line x1="${paddingLeft}" y1="${paddingTop}" x2="${paddingLeft}" y2="${height - paddingBottom}" stroke="#cbd5e1" stroke-width="1" />
+            <line x1="${paddingLeft}" y1="${height - paddingBottom}" x2="${width - paddingRight}" y2="${height - paddingBottom}" stroke="#cbd5e1" stroke-width="1" />
+            ${xLabelsSvg}
+            <path d="${pathFor(data.salesData)}" fill="none" stroke="#16a34a" stroke-width="2.5" />
+            ${pointsFor(data.salesData, '#16a34a')}
+            <path d="${pathFor(data.purchaseData)}" fill="none" stroke="#dc2626" stroke-width="2.5" />
+            ${pointsFor(data.purchaseData, '#dc2626')}
+        </svg>
+        <div style="display: flex; gap: 20px; justify-content: center; font-size: 13px; height: 26px; align-items: center;">
+            <span style="color: #16a34a; font-weight: 600;">● Sales</span>
+            <span style="color: #dc2626; font-weight: 600;">● Purchases</span>
+        </div>
+    `;
+}
+
+function renderClientsPage() {
+    return `
+        <h2 class="page-title">Client Management</h2>
+        <div class="action-bar">
+            <button class="btn btn-success" onclick="document.getElementById('client_file').click()">Import Excel</button>
+            <button class="btn btn-primary" onclick="exportData(state.clients, 'clients')">Export Excel</button>
+            <button class="btn btn-secondary" onclick="showClientForm()">+ New Client</button>
+            <input type="file" id="client_file" style="display: none;" accept=".csv,.xlsx" onchange="importClients(event)">
+        </div>
+        
+        <div id="client-form" style="display: none;">
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">Add New Client</h3>
+                <div class="form-grid">
+                    <input type="text" id="client_name" placeholder="Client Name *" required>
+                    <input type="email" id="client_email" placeholder="Email *" required>
+                    <input type="tel" id="client_phone" placeholder="Phone">
+                    <input type="text" id="client_gst" placeholder="GST No">
+                    <input type="text" id="client_pan" placeholder="PAN No">
+                    <select id="client_state" class="select-dropdown">
+                        <option value="">Select State (for GST place of supply)</option>
+                        ${INDIAN_STATES.map(s => `<option value="${s.name}" data-code="${s.code}">${s.name}</option>`).join('')}
+                    </select>
+                    <input type="text" id="client_address" placeholder="Address">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="submitClientForm()" style="flex: 1;">Save Client</button>
+                    <button class="btn" style="flex: 1; background-color: #e2e8f0; color: #475569;" onclick="hideClientForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            ${state.clients.length === 0 ? '<p class="empty-state">No clients added yet</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>GST No</th>
+                            <th>State</th>
+                            <th>Outstanding Balance</th>
+                            <th>Added Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${state.clients.map(c => {
+                            const bal = clientBalance(c.id);
+                            return `
+                            <tr>
+                                <td>${c.name}</td>
+                                <td>${c.email}</td>
+                                <td>${c.phone || '-'}</td>
+                                <td>${c.gstNo || '-'}</td>
+                                <td>${c.state || '-'}</td>
+                                <td style="text-align: right; font-weight: 600; color: ${bal >= 0 ? '#15803d' : '#991b1b'};">₹${Math.abs(bal).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${bal >= 0 ? 'Dr' : 'Cr'}</td>
+                                <td>${c.createdDate}</td>
+                            </tr>
+                        `; }).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+    `;
+}
+
+function showClientForm() {
+    document.getElementById('client-form').style.display = 'block';
+}
+
+function hideClientForm() {
+    document.getElementById('client-form').style.display = 'none';
+    document.getElementById('client_name').value = '';
+    document.getElementById('client_email').value = '';
+    document.getElementById('client_phone').value = '';
+    document.getElementById('client_gst').value = '';
+    document.getElementById('client_pan').value = '';
+    document.getElementById('client_state').value = '';
+    document.getElementById('client_address').value = '';
+}
+
+function submitClientForm() {
+    const name = document.getElementById('client_name').value;
+    const email = document.getElementById('client_email').value;
+    const stateSelect = document.getElementById('client_state');
+    const stateName = stateSelect.value;
+    const stateCode = stateSelect.selectedOptions[0] ? stateSelect.selectedOptions[0].dataset.code || '' : '';
+    
+    if (!name || !email) {
+        alert('Name and Email are required');
+        return;
+    }
+    
+    addClient({
+        name,
+        email,
+        phone: document.getElementById('client_phone').value,
+        gstNo: document.getElementById('client_gst').value,
+        panNo: document.getElementById('client_pan').value,
+        state: stateName,
+        stateCode: stateCode,
+        address: document.getElementById('client_address').value
+    });
+    hideClientForm();
+}
+
+function importClients(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const rows = text.split('\n').filter(r => r.trim());
+            const headers = rows[0].split(',');
+            
+            rows.slice(1).forEach((row, idx) => {
+                const values = row.split(',');
+                const obj = {};
+                headers.forEach((h, i) => {
+                    obj[h.trim()] = values[i] ? values[i].trim() : '';
+                });
+                
+                if (obj.name || obj.Name) {
+                    state.clients.push({
+                        id: 'client_' + Date.now() + idx,
+                        name: obj.name || obj.Name || '',
+                        email: obj.email || obj.Email || '',
+                        phone: obj.phone || obj.Phone || '',
+                        gstNo: obj.gstNo || obj['GST No'] || '',
+                        panNo: obj.panNo || obj['PAN No'] || '',
+                        state: obj.state || obj.State || '',
+                        stateCode: (INDIAN_STATES.find(s => s.name === (obj.state || obj.State)) || {}).code || '',
+                        address: obj.address || obj.Address || '',
+                        createdDate: new Date().toISOString().split('T')[0]
+                    });
+                }
+            });
+            saveDataToStorage();
+            alert('Clients imported successfully!');
+            renderApp();
+        } catch (err) {
+            alert('Error importing file: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ---- Vendor/Supplier Management (separate list from Clients; used only by Purchase entries) ----
+
+function renderVendorsPage() {
+    return `
+        <h2 class="page-title">Vendor / Supplier Management</h2>
+        <div class="action-bar">
+            <button class="btn btn-success" onclick="document.getElementById('vendor_file').click()">Import Excel</button>
+            <button class="btn btn-primary" onclick="exportData(state.vendors, 'vendors')">Export Excel</button>
+            <button class="btn btn-secondary" onclick="showVendorForm()">+ New Vendor</button>
+            <input type="file" id="vendor_file" style="display: none;" accept=".csv,.xlsx" onchange="importVendors(event)">
+        </div>
+        
+        <div id="vendor-form" style="display: none;">
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">Add New Vendor/Supplier</h3>
+                <div class="form-grid">
+                    <input type="text" id="vendor_name" placeholder="Vendor Name *" required>
+                    <input type="email" id="vendor_email" placeholder="Email *" required>
+                    <input type="tel" id="vendor_phone" placeholder="Phone">
+                    <input type="text" id="vendor_gst" placeholder="GST No">
+                    <input type="text" id="vendor_pan" placeholder="PAN No">
+                    <select id="vendor_state" class="select-dropdown">
+                        <option value="">Select State (for GST place of supply)</option>
+                        ${INDIAN_STATES.map(s => `<option value="${s.name}" data-code="${s.code}">${s.name}</option>`).join('')}
+                    </select>
+                    <input type="text" id="vendor_address" placeholder="Address">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="submitVendorForm()" style="flex: 1;">Save Vendor</button>
+                    <button class="btn" style="flex: 1; background-color: #e2e8f0; color: #475569;" onclick="hideVendorForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            ${state.vendors.length === 0 ? '<p class="empty-state">No vendors added yet</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>GST No</th>
+                            <th>State</th>
+                            <th>Outstanding Payable</th>
+                            <th>Added Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${state.vendors.map(v => {
+                            const bal = vendorBalance(v.id);
+                            return `
+                            <tr>
+                                <td>${v.name}</td>
+                                <td>${v.email}</td>
+                                <td>${v.phone || '-'}</td>
+                                <td>${v.gstNo || '-'}</td>
+                                <td>${v.state || '-'}</td>
+                                <td style="text-align: right; font-weight: 600; color: ${bal > 0 ? '#991b1b' : '#15803d'};">₹${Math.abs(bal).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${bal > 0 ? 'Cr' : 'Nil'}</td>
+                                <td>${v.createdDate}</td>
+                            </tr>
+                        `; }).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+    `;
+}
+
+function showVendorForm() {
+    document.getElementById('vendor-form').style.display = 'block';
+}
+
+function hideVendorForm() {
+    document.getElementById('vendor-form').style.display = 'none';
+    document.getElementById('vendor_name').value = '';
+    document.getElementById('vendor_email').value = '';
+    document.getElementById('vendor_phone').value = '';
+    document.getElementById('vendor_gst').value = '';
+    document.getElementById('vendor_pan').value = '';
+    document.getElementById('vendor_state').value = '';
+    document.getElementById('vendor_address').value = '';
+}
+
+function submitVendorForm() {
+    const name = document.getElementById('vendor_name').value;
+    const email = document.getElementById('vendor_email').value;
+    const stateSelect = document.getElementById('vendor_state');
+    const stateName = stateSelect.value;
+    const stateCode = stateSelect.selectedOptions[0] ? stateSelect.selectedOptions[0].dataset.code || '' : '';
+    
+    if (!name || !email) {
+        alert('Name and Email are required');
+        return;
+    }
+    
+    addVendor({
+        name,
+        email,
+        phone: document.getElementById('vendor_phone').value,
+        gstNo: document.getElementById('vendor_gst').value,
+        panNo: document.getElementById('vendor_pan').value,
+        state: stateName,
+        stateCode: stateCode,
+        address: document.getElementById('vendor_address').value
+    });
+    hideVendorForm();
+}
+
+function importVendors(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const rows = text.split('\n').filter(r => r.trim());
+            const headers = rows[0].split(',');
+            
+            rows.slice(1).forEach((row, idx) => {
+                const values = row.split(',');
+                const obj = {};
+                headers.forEach((h, i) => {
+                    obj[h.trim()] = values[i] ? values[i].trim() : '';
+                });
+                
+                if (obj.name || obj.Name) {
+                    state.vendors.push({
+                        id: 'vendor_' + Date.now() + idx,
+                        name: obj.name || obj.Name || '',
+                        email: obj.email || obj.Email || '',
+                        phone: obj.phone || obj.Phone || '',
+                        gstNo: obj.gstNo || obj['GST No'] || '',
+                        panNo: obj.panNo || obj['PAN No'] || '',
+                        state: obj.state || obj.State || '',
+                        stateCode: (INDIAN_STATES.find(s => s.name === (obj.state || obj.State)) || {}).code || '',
+                        address: obj.address || obj.Address || '',
+                        createdDate: new Date().toISOString().split('T')[0]
+                    });
+                }
+            });
+            saveDataToStorage();
+            alert('Vendors imported successfully!');
+            renderApp();
+        } catch (err) {
+            alert('Error importing file: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function renderPurchasePage() {
+    const purchases = state.transactions.filter(t => t.type === 'purchase');
+    const total = purchases.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const totalGst = purchases.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
+    
+    return `
+        <h2 class="page-title">Purchase Ledger</h2>
+        <div class="action-bar">
+            <button class="btn btn-success" onclick="document.getElementById('purchase_file').click()">Import Excel</button>
+            <button class="btn btn-primary" onclick="exportData(purchases, 'purchases')">Export Excel</button>
+            <button class="btn btn-secondary" onclick="showPurchaseForm()">+ New Entry</button>
+            <input type="file" id="purchase_file" style="display: none;" accept=".csv,.xlsx" onchange="importPurchases(event)">
+        </div>
+        
+        <div id="purchase-form" style="display: none;">
+            <div class="card">
+                <h3 id="purchase-form-title" style="margin-bottom: 16px;">Add Purchase Entry (Inward Supply)</h3>
+                ${state.vendors.length === 0 ? '<p style="color:#991b1b; margin-bottom: 12px;">Add a vendor under the Vendors tab first — purchases must be linked to a vendor record.</p>' : ''}
+                <div class="form-grid">
+                    <select id="purchase_vendor" class="select-dropdown" onchange="updatePurchaseGstPreview()">
+                        <option value="">Select Vendor/Supplier *</option>
+                        ${state.vendors.map(v => `<option value="${v.id}">${v.name}</option>`).join('')}
+                    </select>
+                    <input type="text" id="purchase_hsn" placeholder="HSN/SAC Code">
+                    <input type="date" id="purchase_date" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="number" id="purchase_taxable" placeholder="Taxable Value *" step="0.01" required oninput="updatePurchaseGstPreview()">
+                    <select id="purchase_gstrate" class="select-dropdown" onchange="updatePurchaseGstPreview()">
+                        ${GST_RATES.map(r => `<option value="${r}" ${r === 18 ? 'selected' : ''}>${r}% GST</option>`).join('')}
+                    </select>
+                    <input type="text" id="purchase_invoice" placeholder="Supplier Invoice No">
+                    <input type="text" id="purchase_ref" placeholder="Reference/PO No">
+                    <input type="text" id="purchase_desc" placeholder="Description of Goods/Services">
+                </div>
+                <p id="purchase_gst_preview" style="font-size: 13px; color: #475569; margin-bottom: 16px;"></p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" id="purchase_submit_btn" onclick="submitPurchaseForm()" style="flex: 1;">Save Entry</button>
+                    <button class="btn" style="flex: 1; background-color: #e2e8f0; color: #475569;" onclick="hidePurchaseForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-card orange">
+                <p>Total Purchases</p>
+                <div class="value">₹${total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div class="metric-card orange">
+                <p>Total GST</p>
+                <div class="value">₹${totalGst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            ${purchases.length === 0 ? '<p class="empty-state">No purchases recorded</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Vendor</th>
+                            <th>Invoice</th>
+                            <th>HSN/SAC</th>
+                            <th style="text-align: right;">Taxable Value</th>
+                            <th style="text-align: right;">GST</th>
+                            <th style="text-align: right;">Total</th>
+                            <th style="text-align: right;">Paid</th>
+                            <th style="text-align: right;">Balance</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${purchases.map(t => {
+                            const paid = invoicePaidAmount(t.id);
+                            const balance = round2((parseFloat(t.amount) || 0) - paid);
+                            return `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td>${t.vendor}</td>
+                                <td>${t.invoiceNo || '-'}</td>
+                                <td>${t.hsnCode || '-'}</td>
+                                <td style="text-align: right;">₹${parseFloat(t.taxableValue != null ? t.taxableValue : t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td style="text-align: right;">₹${parseFloat(t.gstAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}${t.igst ? ' (IGST)' : (t.cgst ? ' (C+S)' : '')}</td>
+                                <td style="text-align: right; font-weight: 600;">₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td style="text-align: right; color: #92400e;">₹${paid.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td style="text-align: right; color: ${balance > 0 ? '#dc2626' : '#15803d'};">₹${balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td><button onclick="editPurchaseEntry('${t.id}')" title="Edit entry" style="background: none; border: none; cursor: pointer; font-size: 16px;">✏️</button></td>
+                            </tr>
+                        `; }).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+    `;
+}
+
+function showPurchaseForm() {
+    document.getElementById('purchase-form').style.display = 'block';
+}
+
+function hidePurchaseForm() {
+    document.getElementById('purchase-form').style.display = 'none';
+    clearPurchaseForm();
+    state.editingPurchaseId = null;
+    const title = document.getElementById('purchase-form-title');
+    if (title) title.textContent = 'Add Purchase Entry (Inward Supply)';
+    const btn = document.getElementById('purchase_submit_btn');
+    if (btn) btn.textContent = 'Save Entry';
+}
+
+// Populate the purchase form with an existing entry's data and switch it into edit mode.
+function editPurchaseEntry(id) {
+    const t = state.transactions.find(tr => tr.id === id && tr.type === 'purchase');
+    if (!t) return;
+    state.editingPurchaseId = id;
+    showPurchaseForm();
+    document.getElementById('purchase_vendor').value = t.vendorId || '';
+    document.getElementById('purchase_hsn').value = t.hsnCode || '';
+    document.getElementById('purchase_date').value = t.date || new Date().toISOString().split('T')[0];
+    document.getElementById('purchase_taxable').value = t.taxableValue != null ? t.taxableValue : (t.amount || '');
+    document.getElementById('purchase_gstrate').value = t.gstRate != null ? t.gstRate : 18;
+    document.getElementById('purchase_invoice').value = t.invoiceNo || '';
+    document.getElementById('purchase_ref').value = t.reference || '';
+    document.getElementById('purchase_desc').value = t.description || '';
+    updatePurchaseGstPreview();
+    document.getElementById('purchase-form-title').textContent = 'Edit Purchase Entry (Inward Supply)';
+    document.getElementById('purchase_submit_btn').textContent = 'Update Entry';
+    document.getElementById('purchase-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearPurchaseForm() {
+    document.getElementById('purchase_vendor').value = '';
+    document.getElementById('purchase_hsn').value = '';
+    document.getElementById('purchase_date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('purchase_taxable').value = '';
+    document.getElementById('purchase_invoice').value = '';
+    document.getElementById('purchase_ref').value = '';
+    document.getElementById('purchase_desc').value = '';
+    document.getElementById('purchase_gst_preview').textContent = '';
+}
+
+function updatePurchaseGstPreview() {
+    const vendorId = document.getElementById('purchase_vendor').value;
+    const vendor = state.vendors.find(v => v.id === vendorId);
+    const taxable = document.getElementById('purchase_taxable').value;
+    const rate = document.getElementById('purchase_gstrate').value;
+    const split = computeGstSplit(taxable, rate, vendor ? vendor.stateCode : '', state.company.stateCode);
+    const preview = document.getElementById('purchase_gst_preview');
+    if (!taxable) { preview.textContent = ''; return; }
+    preview.textContent = split.intraState
+        ? `CGST ₹${split.cgst.toLocaleString('en-IN')} + SGST ₹${split.sgst.toLocaleString('en-IN')} = ₹${split.gstAmount.toLocaleString('en-IN')} GST | Total (ITC eligible): ₹${round2(parseFloat(taxable) + split.gstAmount).toLocaleString('en-IN')}`
+        : `IGST ₹${split.igst.toLocaleString('en-IN')} | Total (ITC eligible): ₹${round2(parseFloat(taxable) + split.gstAmount).toLocaleString('en-IN')}`;
+}
+
+function submitPurchaseForm() {
+    const vendorId = document.getElementById('purchase_vendor').value;
+    const vendor = state.vendors.find(v => v.id === vendorId);
+    const taxable = document.getElementById('purchase_taxable').value;
+    const rate = document.getElementById('purchase_gstrate').value;
+    
+    if (!vendorId || !taxable) {
+        alert('Vendor and Taxable Value are required');
+        return;
+    }
+    
+    const split = computeGstSplit(taxable, rate, vendor.stateCode, state.company.stateCode);
+    const totalAmount = round2(parseFloat(taxable) + split.gstAmount);
+    
+    const payload = {
+        type: 'purchase',
+        vendorId,
+        vendor: vendor.name,
+        hsnCode: document.getElementById('purchase_hsn').value,
+        date: document.getElementById('purchase_date').value || new Date().toISOString().split('T')[0],
+        taxableValue: round2(taxable),
+        gstRate: parseFloat(rate),
+        cgst: split.cgst,
+        sgst: split.sgst,
+        igst: split.igst,
+        gstAmount: split.gstAmount,
+        amount: totalAmount,
+        invoiceNo: document.getElementById('purchase_invoice').value,
+        reference: document.getElementById('purchase_ref').value,
+        description: document.getElementById('purchase_desc').value
+    };
+    
+    if (state.editingPurchaseId) {
+        const idx = state.transactions.findIndex(t => t.id === state.editingPurchaseId);
+        if (idx !== -1) {
+            state.transactions[idx] = { ...state.transactions[idx], ...payload };
+            saveDataToStorage();
+            alert('Purchase entry updated successfully!');
+        }
+        state.editingPurchaseId = null;
+        hidePurchaseForm();
+        renderApp();
+        return;
+    }
+    
+    addTransaction(payload);
+    hidePurchaseForm();
+}
+
+function importPurchases(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const rows = text.split('\n').filter(r => r.trim());
+            const headers = rows[0].split(',');
+            
+            rows.slice(1).forEach((row, idx) => {
+                const values = row.split(',');
+                const obj = {};
+                headers.forEach((h, i) => {
+                    obj[h.trim()] = values[i] ? values[i].trim() : '';
+                });
+                
+                const vendorName = obj.vendor || obj.Vendor || '';
+                if (vendorName) {
+                    const matchedVendor = state.vendors.find(v => v.name.toLowerCase() === vendorName.toLowerCase());
+                    const taxableValue = parseFloat(obj.taxableValue || obj['Taxable Value'] || obj.amount || obj.Amount || 0);
+                    const gstAmount = parseFloat(obj.gstAmount || obj['GST Amount'] || 0);
+                    state.transactions.push({
+                        id: 'trans_' + Date.now() + idx,
+                        type: 'purchase',
+                        date: new Date().toISOString().split('T')[0],
+                        vendorId: matchedVendor ? matchedVendor.id : null,
+                        vendor: vendorName,
+                        taxableValue: round2(taxableValue),
+                        gstAmount: round2(gstAmount),
+                        cgst: 0, sgst: 0, igst: round2(gstAmount),
+                        amount: round2(taxableValue + gstAmount),
+                        invoiceNo: obj.invoiceNo || obj['Invoice No'] || '',
+                        reference: obj.reference || obj.Reference || '',
+                        description: obj.description || obj.Description || '',
+                        userId: state.currentUser.id
+                    });
+                }
+            });
+            saveDataToStorage();
+            alert('Purchases imported successfully!');
+            renderApp();
+        } catch (err) {
+            alert('Error importing file: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function renderSalesPage() {
+    const sales = state.transactions.filter(t => t.type === 'sales');
+    const total = sales.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+    const totalGst = sales.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
+    
+    return `
+        <h2 class="page-title">Sales Ledger</h2>
+        <div class="action-bar">
+            <button class="btn btn-success" onclick="document.getElementById('sales_file').click()">Import Excel</button>
+            <button class="btn btn-primary" onclick="exportData(sales, 'sales')">Export Excel</button>
+            <button class="btn btn-secondary" onclick="showSalesForm()">+ New Entry</button>
+            <input type="file" id="sales_file" style="display: none;" accept=".csv,.xlsx" onchange="importSales(event)">
+        </div>
+        
+        <div id="sales-form" style="display: none;">
+            <div class="card">
+                <h3 id="sales-form-title" style="margin-bottom: 16px;">Add Sales Entry (Outward Supply)</h3>
+                ${state.clients.length === 0 ? '<p style="color:#991b1b; margin-bottom: 12px;">Add a customer under Clients first — sales must be linked to a client record.</p>' : ''}
+                <div class="form-grid">
+                    <select id="sales_customer" class="select-dropdown" onchange="updateSalesGstPreview()">
+                        <option value="">Select Customer *</option>
+                        ${state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                    </select>
+                    <input type="text" id="sales_hsn" placeholder="HSN/SAC Code">
+                    <input type="date" id="sales_date" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="number" id="sales_taxable" placeholder="Taxable Value *" step="0.01" required oninput="updateSalesGstPreview()">
+                    <select id="sales_gstrate" class="select-dropdown" onchange="updateSalesGstPreview()">
+                        ${GST_RATES.map(r => `<option value="${r}" ${r === 18 ? 'selected' : ''}>${r}% GST</option>`).join('')}
+                    </select>
+                    <input type="text" id="sales_invoice" placeholder="Invoice No (auto if blank)">
+                    <input type="text" id="sales_ref" placeholder="Reference/Order No">
+                    <input type="text" id="sales_desc" placeholder="Description of Goods/Services">
+                </div>
+                <p id="sales_gst_preview" style="font-size: 13px; color: #475569; margin-bottom: 16px;"></p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" id="sales_submit_btn" onclick="submitSalesForm()" style="flex: 1;">Save Entry</button>
+                    <button class="btn" style="flex: 1; background-color: #e2e8f0; color: #475569;" onclick="hideSalesForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-card green">
+                <p>Total Sales</p>
+                <div class="value">₹${total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div class="metric-card green">
+                <p>Total GST</p>
+                <div class="value">₹${totalGst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            ${sales.length === 0 ? '<p class="empty-state">No sales recorded</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Invoice</th>
+                            <th>HSN/SAC</th>
+                            <th style="text-align: right;">Taxable Value</th>
+                            <th style="text-align: right;">GST</th>
+                            <th style="text-align: right;">Total</th>
+                            <th style="text-align: right;">Received</th>
+                            <th style="text-align: right;">Balance</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sales.map(t => {
+                            const received = invoiceReceivedAmount(t.id);
+                            const balance = round2((parseFloat(t.amount) || 0) - received);
+                            return `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td>${t.customer}</td>
+                                <td>${t.invoiceNo || '-'}</td>
+                                <td>${t.hsnCode || '-'}</td>
+                                <td style="text-align: right;">₹${parseFloat(t.taxableValue != null ? t.taxableValue : t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td style="text-align: right;">₹${parseFloat(t.gstAmount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}${t.igst ? ' (IGST)' : (t.cgst ? ' (C+S)' : '')}</td>
+                                <td style="text-align: right; font-weight: 600;">₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td style="text-align: right; color: #15803d;">₹${received.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td style="text-align: right; color: ${balance > 0 ? '#92400e' : '#15803d'};">₹${balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td><button onclick="editSalesEntry('${t.id}')" title="Edit entry" style="background: none; border: none; cursor: pointer; font-size: 16px;">✏️</button></td>
+                            </tr>
+                        `; }).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+        <p style="color: #64748b; font-size: 13px; margin-top: 8px;">Every saved sale entry automatically appears as a formatted tax invoice under the <strong>Invoices</strong> tab.</p>
+    `;
+}
+
+function showSalesForm() {
+    document.getElementById('sales-form').style.display = 'block';
+}
+
+function hideSalesForm() {
+    document.getElementById('sales-form').style.display = 'none';
+    clearSalesForm();
+    state.editingSalesId = null;
+    const title = document.getElementById('sales-form-title');
+    if (title) title.textContent = 'Add Sales Entry (Outward Supply)';
+    const btn = document.getElementById('sales_submit_btn');
+    if (btn) btn.textContent = 'Save Entry';
+}
+
+// Populate the sales form with an existing entry's data and switch it into edit mode.
+function editSalesEntry(id) {
+    const t = state.transactions.find(tr => tr.id === id && tr.type === 'sales');
+    if (!t) return;
+    state.editingSalesId = id;
+    showSalesForm();
+    document.getElementById('sales_customer').value = t.clientId || '';
+    document.getElementById('sales_hsn').value = t.hsnCode || '';
+    document.getElementById('sales_date').value = t.date || new Date().toISOString().split('T')[0];
+    document.getElementById('sales_taxable').value = t.taxableValue != null ? t.taxableValue : (t.amount || '');
+    document.getElementById('sales_gstrate').value = t.gstRate != null ? t.gstRate : 18;
+    document.getElementById('sales_invoice').value = t.invoiceNo || '';
+    document.getElementById('sales_ref').value = t.reference || '';
+    document.getElementById('sales_desc').value = t.description || '';
+    updateSalesGstPreview();
+    document.getElementById('sales-form-title').textContent = 'Edit Sales Entry (Outward Supply)';
+    document.getElementById('sales_submit_btn').textContent = 'Update Entry';
+    document.getElementById('sales-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearSalesForm() {
+    document.getElementById('sales_customer').value = '';
+    document.getElementById('sales_hsn').value = '';
+    document.getElementById('sales_date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('sales_taxable').value = '';
+    document.getElementById('sales_invoice').value = '';
+    document.getElementById('sales_ref').value = '';
+    document.getElementById('sales_desc').value = '';
+    document.getElementById('sales_gst_preview').textContent = '';
+}
+
+function updateSalesGstPreview() {
+    const clientId = document.getElementById('sales_customer').value;
+    const client = state.clients.find(c => c.id === clientId);
+    const taxable = document.getElementById('sales_taxable').value;
+    const rate = document.getElementById('sales_gstrate').value;
+    const split = computeGstSplit(taxable, rate, client ? client.stateCode : '', state.company.stateCode);
+    const preview = document.getElementById('sales_gst_preview');
+    if (!taxable) { preview.textContent = ''; return; }
+    preview.textContent = split.intraState
+        ? `CGST ₹${split.cgst.toLocaleString('en-IN')} + SGST ₹${split.sgst.toLocaleString('en-IN')} = ₹${split.gstAmount.toLocaleString('en-IN')} GST | Invoice Total: ₹${round2(parseFloat(taxable) + split.gstAmount).toLocaleString('en-IN')}`
+        : `IGST ₹${split.igst.toLocaleString('en-IN')} | Invoice Total: ₹${round2(parseFloat(taxable) + split.gstAmount).toLocaleString('en-IN')}`;
+}
+
+function nextInvoiceNumber() {
+    const year = new Date().getFullYear();
+    const count = state.transactions.filter(t => t.type === 'sales').length + 1;
+    return `INV/${year}/${String(count).padStart(4, '0')}`;
+}
+
+function submitSalesForm() {
+    const clientId = document.getElementById('sales_customer').value;
+    const client = state.clients.find(c => c.id === clientId);
+    const taxable = document.getElementById('sales_taxable').value;
+    const rate = document.getElementById('sales_gstrate').value;
+    
+    if (!clientId || !taxable) {
+        alert('Customer and Taxable Value are required');
+        return;
+    }
+    
+    const split = computeGstSplit(taxable, rate, client.stateCode, state.company.stateCode);
+    const totalAmount = round2(parseFloat(taxable) + split.gstAmount);
+    const existingInvoiceNo = state.editingSalesId ? (state.transactions.find(t => t.id === state.editingSalesId) || {}).invoiceNo : null;
+    const invoiceNo = document.getElementById('sales_invoice').value || existingInvoiceNo || nextInvoiceNumber();
+    
+    const payload = {
+        type: 'sales',
+        clientId,
+        customer: client.name,
+        hsnCode: document.getElementById('sales_hsn').value,
+        date: document.getElementById('sales_date').value || new Date().toISOString().split('T')[0],
+        taxableValue: round2(taxable),
+        gstRate: parseFloat(rate),
+        cgst: split.cgst,
+        sgst: split.sgst,
+        igst: split.igst,
+        gstAmount: split.gstAmount,
+        amount: totalAmount,
+        invoiceNo,
+        reference: document.getElementById('sales_ref').value,
+        description: document.getElementById('sales_desc').value
+    };
+    
+    if (state.editingSalesId) {
+        const idx = state.transactions.findIndex(t => t.id === state.editingSalesId);
+        if (idx !== -1) {
+            state.transactions[idx] = { ...state.transactions[idx], ...payload };
+            saveDataToStorage();
+            alert('Sales entry updated successfully!');
+        }
+        state.editingSalesId = null;
+        hideSalesForm();
+        renderApp();
+        return;
+    }
+    
+    addTransaction(payload);
+    hideSalesForm();
+}
+
+function importSales(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            const rows = text.split('\n').filter(r => r.trim());
+            const headers = rows[0].split(',');
+            
+            rows.slice(1).forEach((row, idx) => {
+                const values = row.split(',');
+                const obj = {};
+                headers.forEach((h, i) => {
+                    obj[h.trim()] = values[i] ? values[i].trim() : '';
+                });
+                
+                const customerName = obj.customer || obj.Customer || '';
+                if (customerName) {
+                    const matchedClient = state.clients.find(c => c.name.toLowerCase() === customerName.toLowerCase());
+                    const taxableValue = parseFloat(obj.taxableValue || obj['Taxable Value'] || obj.amount || obj.Amount || 0);
+                    const gstAmount = parseFloat(obj.gstAmount || obj['GST Amount'] || 0);
+                    state.transactions.push({
+                        id: 'trans_' + Date.now() + idx,
+                        type: 'sales',
+                        date: new Date().toISOString().split('T')[0],
+                        clientId: matchedClient ? matchedClient.id : null,
+                        customer: customerName,
+                        taxableValue: round2(taxableValue),
+                        gstAmount: round2(gstAmount),
+                        cgst: 0, sgst: 0, igst: round2(gstAmount),
+                        amount: round2(taxableValue + gstAmount),
+                        invoiceNo: obj.invoiceNo || obj['Invoice No'] || nextInvoiceNumber(),
+                        reference: obj.reference || obj.Reference || '',
+                        description: obj.description || obj.Description || '',
+                        userId: state.currentUser.id
+                    });
+                }
+            });
+            saveDataToStorage();
+            alert('Sales imported successfully!');
+            renderApp();
+        } catch (err) {
+            alert('Error importing file: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function renderLedgerPage() {
+    if (state.clients.length === 0 && state.vendors.length === 0) {
+        return `
+            <h2 class="page-title">Ledger</h2>
+            <div class="card empty-state">
+                <p>No clients or vendors to display. Add a client or vendor first.</p>
+            </div>
+        `;
+    }
+    
+    const ledgerType = state.ledgerType || 'client';
+    const party = ledgerType === 'vendor' ? state.vendors : state.clients;
+    
+    return `
+        <h2 class="page-title">Party Ledger Statements</h2>
+        <div class="card">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Ledger Type:</label>
+                    <select id="ledger_type" class="select-dropdown" onchange="switchLedgerType()">
+                        <option value="client" ${ledgerType === 'client' ? 'selected' : ''}>Customer (Sales) Ledger</option>
+                        <option value="vendor" ${ledgerType === 'vendor' ? 'selected' : ''}>Vendor (Purchase) Ledger</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Select ${ledgerType === 'vendor' ? 'Vendor' : 'Client'}:</label>
+                    <select id="ledger_party" class="select-dropdown" onchange="updateLedgerParty()">
+                        ${party.length === 0 ? `<option value="">No ${ledgerType === 'vendor' ? 'vendors' : 'clients'} yet</option>` : party.map(p => `<option value="${p.id}" ${p.id === state.ledgerPartyId ? 'selected' : ''}>${p.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Statement From:</label>
+                    <input type="date" id="ledger_from" value="${state.ledgerFromDate || ''}" onchange="updateLedgerFilter()" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Statement To:</label>
+                    <input type="date" id="ledger_to" value="${state.ledgerToDate || ''}" onchange="updateLedgerFilter()" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+            </div>
+        </div>
+        ${renderLedgerContent()}
+    `;
+}
+
+function switchLedgerType() {
+    state.ledgerType = document.getElementById('ledger_type').value;
+    state.ledgerPartyId = null;
+    renderApp();
+}
+
+function updateLedgerParty() {
+    state.ledgerPartyId = document.getElementById('ledger_party').value;
+    renderApp();
+}
+
+function updateLedgerFilter() {
+    state.ledgerFromDate = document.getElementById('ledger_from').value;
+    state.ledgerToDate = document.getElementById('ledger_to').value;
+    renderApp();
+}
+
+// Shared by the on-screen ledger and the WhatsApp statement share, so both always agree.
+// fromDate/toDate are 'YYYY-MM-DD' strings or '' for no bound (inclusive range).
+function computeLedgerStatement(ledgerType, partyId, fromDate, toDate) {
+    const party = ledgerType === 'vendor' ? state.vendors : state.clients;
+    const p = party.find(x => x.id === partyId);
+    if (!p) return null;
+    
+    // Vendor ledger: this party's purchase entries only. Client ledger: their sales entries
+    // (with a name-match fallback for legacy/imported rows that predate the clientId/vendorId link).
+    const all = (ledgerType === 'vendor'
+        ? state.transactions.filter(t => t.type === 'purchase' && (t.vendorId === p.id || t.vendor === p.name))
+        : state.transactions.filter(t => t.type === 'sales' && (t.clientId === p.id || t.customer === p.name))
+    ).slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    
+    let opening = 0;
+    if (fromDate) {
+        all.filter(t => (t.date || '') < fromDate).forEach(t => {
+            opening += t.type === 'sales' ? (parseFloat(t.amount) || 0) : -(parseFloat(t.amount) || 0);
+        });
+    }
+    
+    const inRange = all.filter(t => (!fromDate || (t.date || '') >= fromDate) && (!toDate || (t.date || '') <= toDate));
+    let running = opening;
+    const rows = inRange.map(t => {
+        // Sales invoice = client owes us (Debit). Purchase entry = we owe the vendor (Credit).
+        running += t.type === 'sales' ? (parseFloat(t.amount) || 0) : -(parseFloat(t.amount) || 0);
+        return { ...t, running };
+    });
+    
+    return { party: p, rows, opening, closing: running };
+}
+
+function renderLedgerContent() {
+    const ledgerType = state.ledgerType || 'client';
+    const party = ledgerType === 'vendor' ? state.vendors : state.clients;
+    const partyId = state.ledgerPartyId || party[0]?.id;
+    const fromDate = state.ledgerFromDate || '';
+    const toDate = state.ledgerToDate || '';
+    const data = computeLedgerStatement(ledgerType, partyId, fromDate, toDate);
+    if (!data) return '';
+    const { party: p, rows, opening, closing } = data;
+    
+    return `
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <h3 style="margin: 0;">${p.name}</h3>
+                <button class="btn" style="background-color: #25D366; color: white; padding: 8px 14px; font-size: 13px;" title="Share this statement on WhatsApp" onclick="shareLedgerOnWhatsApp()">📱 Share Statement on WhatsApp</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <div><strong>GST No:</strong> ${p.gstNo || 'N/A'}</div>
+                <div><strong>PAN No:</strong> ${p.panNo || 'N/A'}</div>
+                <div><strong>State:</strong> ${p.state || 'N/A'}</div>
+                <div><strong>Email:</strong> ${p.email}</div>
+                <div><strong>Phone:</strong> ${p.phone || 'N/A'}</div>
+            </div>
+            ${fromDate || toDate ? `<p style="font-size: 13px; color: #475569; margin-bottom: 12px;">Statement period: ${fromDate || 'Beginning'} to ${toDate || 'Today'} &nbsp;|&nbsp; Opening Balance: ₹${Math.abs(opening).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${opening >= 0 ? 'Dr' : 'Cr'}</p>` : ''}
+            
+            ${rows.length === 0 ? `<p class="empty-state">No transactions for this ${ledgerType === 'vendor' ? 'vendor' : 'client'} in this period</p>` : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Particulars</th>
+                            <th>Invoice/Ref</th>
+                            <th style="text-align: right;">Debit</th>
+                            <th style="text-align: right;">Credit</th>
+                            <th style="text-align: right;">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map(t => `
+                            <tr>
+                                <td>${t.date}</td>
+                                <td><span class="badge ${t.type === 'purchase' ? 'badge-orange' : 'badge-green'}">${t.type === 'purchase' ? 'Purchase (Inward)' : 'Sales (Outward)'}</span></td>
+                                <td>${t.invoiceNo || t.reference || '-'}</td>
+                                <td style="text-align: right;">${t.type === 'sales' ? '₹' + parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-'}</td>
+                                <td style="text-align: right;">${t.type === 'purchase' ? '₹' + parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '-'}</td>
+                                <td style="text-align: right; font-weight: 600;">₹${Math.abs(t.running).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${t.running >= 0 ? 'Dr' : 'Cr'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <p style="margin-top: 12px; font-weight: 600;">
+                    Closing Balance: ₹${Math.abs(closing).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${closing >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}
+                </p>
+            `}
+        </div>
+    `;
+}
+
+// Sends the party's ledger statement (respecting the From/To date filter above) as a WhatsApp
+// message to their registered phone number. Long statements are summarized past 20 entries,
+// since WhatsApp's click-to-chat link only pre-fills text, not an attached file.
+function shareLedgerOnWhatsApp() {
+    const ledgerType = state.ledgerType || 'client';
+    const party = ledgerType === 'vendor' ? state.vendors : state.clients;
+    const partyId = state.ledgerPartyId || party[0]?.id;
+    const fromDate = state.ledgerFromDate || '';
+    const toDate = state.ledgerToDate || '';
+    const data = computeLedgerStatement(ledgerType, partyId, fromDate, toDate);
+    if (!data) return;
+    const { party: p, rows, opening, closing } = data;
+    const periodText = (fromDate || toDate) ? `${fromDate || 'Beginning'} to ${toDate || 'Today'}` : 'All Time';
+    
+    let message = `Dear ${p.name},\n\n`
+        + `Greetings from ${state.company.name || 'our office'}.\n`
+        + `Here is your account statement (${periodText}):\n\n`
+        + `Opening Balance: ₹${Math.abs(opening).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${opening >= 0 ? 'Dr' : 'Cr'}\n`;
+    
+    const shown = rows.slice(0, 20);
+    shown.forEach(t => {
+        message += `${t.date} - ${t.type === 'sales' ? 'Sales' : 'Purchase'} ${t.invoiceNo || t.reference || ''} - ₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}\n`;
+    });
+    if (rows.length > shown.length) {
+        message += `...+${rows.length - shown.length} more entries (view full statement in the app)\n`;
+    }
+    
+    message += `\nClosing Balance: ₹${Math.abs(closing).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${closing >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}\n\nThank you.`;
+    
+    openWhatsAppShare(p.phone, message, ledgerType === 'vendor' ? 'vendor' : 'client');
+}
+
+// ---- Banking: Receipts & Payments, mapped back to Sales/Purchase invoices ----
+
+function renderBankingPage() {
+    const sub = state.bankingSubTab || 'receipts';
+    const receipts = (state.bankEntries || []).filter(b => b.type === 'receipt');
+    const payments = (state.bankEntries || []).filter(b => b.type === 'payment');
+    const totalReceipts = receipts.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+    const totalPayments = payments.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+    const netCash = round2(totalReceipts - totalPayments);
+
+    return `
+        <h2 class="page-title">Banking — Receipts &amp; Payments</h2>
+        <div class="metrics">
+            <div class="metric-card green">
+                <p>Total Receipts</p>
+                <div class="value">₹${totalReceipts.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div class="metric-card orange">
+                <p>Total Payments</p>
+                <div class="value">₹${totalPayments.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div class="metric-card ${netCash >= 0 ? 'blue' : 'orange'}">
+                <p>Net Cash Flow</p>
+                <div class="value">₹${Math.abs(netCash).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn" style="background-color: ${sub === 'receipts' ? '#1e293b' : '#e2e8f0'}; color: ${sub === 'receipts' ? 'white' : '#475569'};" onclick="switchBankingTab('receipts')">Receipts (Money In)</button>
+            <button class="btn" style="background-color: ${sub === 'payments' ? '#1e293b' : '#e2e8f0'}; color: ${sub === 'payments' ? 'white' : '#475569'};" onclick="switchBankingTab('payments')">Payments (Money Out)</button>
+        </div>
+
+        ${sub === 'receipts' ? renderReceiptsSection(receipts) : renderPaymentsSection(payments)}
+    `;
+}
+
+function switchBankingTab(tab) {
+    state.bankingSubTab = tab;
+    renderApp();
+}
+
+function renderReceiptsSection(receipts) {
+    const salesInvoices = state.transactions.filter(t => t.type === 'sales');
+    return `
+        <div class="action-bar">
+            <button class="btn btn-secondary" onclick="showReceiptForm()">+ New Receipt</button>
+        </div>
+        <div id="receipt-form" style="display: none;">
+            <div class="card">
+                <h3 id="receipt-form-title" style="margin-bottom: 16px;">Record Receipt (Money In)</h3>
+                <div class="form-grid">
+                    <select id="receipt_invoice" class="select-dropdown" onchange="updateReceiptFromInvoice()">
+                        <option value="">Not linked to an invoice (Advance / Other Income)</option>
+                        ${salesInvoices.map(t => {
+                            const outstanding = round2((parseFloat(t.amount) || 0) - invoiceReceivedAmount(t.id));
+                            return `<option value="${t.id}">${t.invoiceNo || 'INV'} — ${t.customer} (Outstanding ₹${outstanding.toLocaleString('en-IN')})</option>`;
+                        }).join('')}
+                    </select>
+                    <input type="text" id="receipt_party" placeholder="Received From *">
+                    <input type="date" id="receipt_date" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="number" id="receipt_amount" placeholder="Amount *" step="0.01">
+                    <select id="receipt_mode" class="select-dropdown">
+                        <option>Cash</option>
+                        <option>Bank Transfer</option>
+                        <option>UPI</option>
+                        <option>Cheque</option>
+                        <option>NEFT</option>
+                        <option>RTGS</option>
+                        <option>Card</option>
+                    </select>
+                    <input type="text" id="receipt_ref" placeholder="Reference / UTR / Cheque No">
+                    <input type="text" id="receipt_narration" placeholder="Narration">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" id="receipt_submit_btn" onclick="submitReceiptForm()" style="flex: 1;">Save Receipt</button>
+                    <button class="btn" style="flex: 1; background-color: #e2e8f0; color: #475569;" onclick="hideReceiptForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            ${receipts.length === 0 ? '<p class="empty-state">No receipts recorded</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Received From</th>
+                            <th>Linked Sales Invoice</th>
+                            <th>Mode</th>
+                            <th>Reference</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${receipts.slice().reverse().map(b => {
+                            const linked = b.linkedTransactionId ? state.transactions.find(t => t.id === b.linkedTransactionId) : null;
+                            return `
+                            <tr>
+                                <td>${b.date}</td>
+                                <td>${b.party}</td>
+                                <td>${linked ? (linked.invoiceNo || '-') : '<span style="color: #94a3b8;">Not linked</span>'}</td>
+                                <td>${b.mode}</td>
+                                <td>${b.reference || '-'}</td>
+                                <td style="text-align: right; font-weight: 600;">₹${parseFloat(b.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td><button onclick="editReceiptEntry('${b.id}')" title="Edit entry" style="background: none; border: none; cursor: pointer; font-size: 16px;">✏️</button></td>
+                            </tr>
+                        `; }).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+    `;
+}
+
+function renderPaymentsSection(payments) {
+    const purchaseInvoices = state.transactions.filter(t => t.type === 'purchase');
+    return `
+        <div class="action-bar">
+            <button class="btn btn-secondary" onclick="showPaymentForm()">+ New Payment</button>
+        </div>
+        <div id="payment-form" style="display: none;">
+            <div class="card">
+                <h3 id="payment-form-title" style="margin-bottom: 16px;">Record Payment (Money Out)</h3>
+                <div class="form-grid">
+                    <select id="payment_invoice" class="select-dropdown" onchange="updatePaymentFromInvoice()">
+                        <option value="">Not linked to an invoice (Expense / Other)</option>
+                        ${purchaseInvoices.map(t => {
+                            const outstanding = round2((parseFloat(t.amount) || 0) - invoicePaidAmount(t.id));
+                            return `<option value="${t.id}">${t.invoiceNo || 'PUR'} — ${t.vendor} (Outstanding ₹${outstanding.toLocaleString('en-IN')})</option>`;
+                        }).join('')}
+                    </select>
+                    <input type="text" id="payment_party" placeholder="Paid To *">
+                    <input type="date" id="payment_date" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="number" id="payment_amount" placeholder="Amount *" step="0.01">
+                    <select id="payment_mode" class="select-dropdown">
+                        <option>Cash</option>
+                        <option>Bank Transfer</option>
+                        <option>UPI</option>
+                        <option>Cheque</option>
+                        <option>NEFT</option>
+                        <option>RTGS</option>
+                        <option>Card</option>
+                    </select>
+                    <input type="text" id="payment_ref" placeholder="Reference / UTR / Cheque No">
+                    <input type="text" id="payment_narration" placeholder="Narration">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" id="payment_submit_btn" onclick="submitPaymentForm()" style="flex: 1;">Save Payment</button>
+                    <button class="btn" style="flex: 1; background-color: #e2e8f0; color: #475569;" onclick="hidePaymentForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            ${payments.length === 0 ? '<p class="empty-state">No payments recorded</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Paid To</th>
+                            <th>Linked Purchase Invoice</th>
+                            <th>Mode</th>
+                            <th>Reference</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${payments.slice().reverse().map(b => {
+                            const linked = b.linkedTransactionId ? state.transactions.find(t => t.id === b.linkedTransactionId) : null;
+                            return `
+                            <tr>
+                                <td>${b.date}</td>
+                                <td>${b.party}</td>
+                                <td>${linked ? (linked.invoiceNo || '-') : '<span style="color: #94a3b8;">Not linked</span>'}</td>
+                                <td>${b.mode}</td>
+                                <td>${b.reference || '-'}</td>
+                                <td style="text-align: right; font-weight: 600;">₹${parseFloat(b.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td><button onclick="editPaymentEntry('${b.id}')" title="Edit entry" style="background: none; border: none; cursor: pointer; font-size: 16px;">✏️</button></td>
+                            </tr>
+                        `; }).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+    `;
+}
+
+function addBankEntry(data) {
+    const entry = {
+        id: 'bank_' + Date.now(),
+        ...data,
+        userId: state.currentUser.id
+    };
+    if (!state.bankEntries) state.bankEntries = [];
+    state.bankEntries.push(entry);
+    saveDataToStorage();
+    alert(data.type === 'receipt' ? 'Receipt recorded successfully!' : 'Payment recorded successfully!');
+    renderApp();
+}
+
+// -- Receipts --
+function showReceiptForm() {
+    const form = document.getElementById('receipt-form');
+    if (form) form.style.display = 'block';
+}
+
+function clearReceiptForm() {
+    ['receipt_invoice', 'receipt_party', 'receipt_ref', 'receipt_narration'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const amt = document.getElementById('receipt_amount');
+    if (amt) amt.value = '';
+    const date = document.getElementById('receipt_date');
+    if (date) date.value = new Date().toISOString().split('T')[0];
+    const mode = document.getElementById('receipt_mode');
+    if (mode) mode.value = 'Cash';
+}
+
+function hideReceiptForm() {
+    const form = document.getElementById('receipt-form');
+    if (form) form.style.display = 'none';
+    clearReceiptForm();
+    state.editingReceiptId = null;
+    const title = document.getElementById('receipt-form-title');
+    if (title) title.textContent = 'Record Receipt (Money In)';
+    const btn = document.getElementById('receipt_submit_btn');
+    if (btn) btn.textContent = 'Save Receipt';
+}
+
+function updateReceiptFromInvoice() {
+    const id = document.getElementById('receipt_invoice').value;
+    if (!id) return;
+    const t = state.transactions.find(tr => tr.id === id);
+    if (!t) return;
+    document.getElementById('receipt_party').value = t.customer || '';
+    const amountEl = document.getElementById('receipt_amount');
+    if (!amountEl.value) {
+        const outstanding = round2((parseFloat(t.amount) || 0) - invoiceReceivedAmount(t.id));
+        if (outstanding > 0) amountEl.value = outstanding;
+    }
+}
+
+function editReceiptEntry(id) {
+    const b = (state.bankEntries || []).find(e => e.id === id && e.type === 'receipt');
+    if (!b) return;
+    state.editingReceiptId = id;
+    showReceiptForm();
+    document.getElementById('receipt_invoice').value = b.linkedTransactionId || '';
+    document.getElementById('receipt_party').value = b.party || '';
+    document.getElementById('receipt_date').value = b.date || '';
+    document.getElementById('receipt_amount').value = b.amount != null ? b.amount : '';
+    document.getElementById('receipt_mode').value = b.mode || 'Cash';
+    document.getElementById('receipt_ref').value = b.reference || '';
+    document.getElementById('receipt_narration').value = b.narration || '';
+    document.getElementById('receipt-form-title').textContent = 'Edit Receipt';
+    document.getElementById('receipt_submit_btn').textContent = 'Update Receipt';
+    document.getElementById('receipt-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function submitReceiptForm() {
+    const invoiceId = document.getElementById('receipt_invoice').value;
+    const party = document.getElementById('receipt_party').value;
+    const date = document.getElementById('receipt_date').value || new Date().toISOString().split('T')[0];
+    const amount = document.getElementById('receipt_amount').value;
+    const mode = document.getElementById('receipt_mode').value;
+    const reference = document.getElementById('receipt_ref').value;
+    const narration = document.getElementById('receipt_narration').value;
+
+    if (!party || !amount) {
+        alert('Received From and Amount are required');
+        return;
+    }
+
+    const payload = {
+        type: 'receipt',
+        linkedTransactionId: invoiceId || null,
+        party,
+        date,
+        amount: round2(amount),
+        mode,
+        reference,
+        narration
+    };
+
+    if (state.editingReceiptId) {
+        const idx = state.bankEntries.findIndex(b => b.id === state.editingReceiptId);
+        if (idx !== -1) {
+            state.bankEntries[idx] = { ...state.bankEntries[idx], ...payload };
+            saveDataToStorage();
+            alert('Receipt updated successfully!');
+        }
+        state.editingReceiptId = null;
+        hideReceiptForm();
+        renderApp();
+        return;
+    }
+
+    addBankEntry(payload);
+    hideReceiptForm();
+}
+
+// -- Payments --
+function showPaymentForm() {
+    const form = document.getElementById('payment-form');
+    if (form) form.style.display = 'block';
+}
+
+function clearPaymentForm() {
+    ['payment_invoice', 'payment_party', 'payment_ref', 'payment_narration'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const amt = document.getElementById('payment_amount');
+    if (amt) amt.value = '';
+    const date = document.getElementById('payment_date');
+    if (date) date.value = new Date().toISOString().split('T')[0];
+    const mode = document.getElementById('payment_mode');
+    if (mode) mode.value = 'Cash';
+}
+
+function hidePaymentForm() {
+    const form = document.getElementById('payment-form');
+    if (form) form.style.display = 'none';
+    clearPaymentForm();
+    state.editingPaymentId = null;
+    const title = document.getElementById('payment-form-title');
+    if (title) title.textContent = 'Record Payment (Money Out)';
+    const btn = document.getElementById('payment_submit_btn');
+    if (btn) btn.textContent = 'Save Payment';
+}
+
+function updatePaymentFromInvoice() {
+    const id = document.getElementById('payment_invoice').value;
+    if (!id) return;
+    const t = state.transactions.find(tr => tr.id === id);
+    if (!t) return;
+    document.getElementById('payment_party').value = t.vendor || '';
+    const amountEl = document.getElementById('payment_amount');
+    if (!amountEl.value) {
+        const outstanding = round2((parseFloat(t.amount) || 0) - invoicePaidAmount(t.id));
+        if (outstanding > 0) amountEl.value = outstanding;
+    }
+}
+
+function editPaymentEntry(id) {
+    const b = (state.bankEntries || []).find(e => e.id === id && e.type === 'payment');
+    if (!b) return;
+    state.editingPaymentId = id;
+    showPaymentForm();
+    document.getElementById('payment_invoice').value = b.linkedTransactionId || '';
+    document.getElementById('payment_party').value = b.party || '';
+    document.getElementById('payment_date').value = b.date || '';
+    document.getElementById('payment_amount').value = b.amount != null ? b.amount : '';
+    document.getElementById('payment_mode').value = b.mode || 'Cash';
+    document.getElementById('payment_ref').value = b.reference || '';
+    document.getElementById('payment_narration').value = b.narration || '';
+    document.getElementById('payment-form-title').textContent = 'Edit Payment';
+    document.getElementById('payment_submit_btn').textContent = 'Update Payment';
+    document.getElementById('payment-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function submitPaymentForm() {
+    const invoiceId = document.getElementById('payment_invoice').value;
+    const party = document.getElementById('payment_party').value;
+    const date = document.getElementById('payment_date').value || new Date().toISOString().split('T')[0];
+    const amount = document.getElementById('payment_amount').value;
+    const mode = document.getElementById('payment_mode').value;
+    const reference = document.getElementById('payment_ref').value;
+    const narration = document.getElementById('payment_narration').value;
+
+    if (!party || !amount) {
+        alert('Paid To and Amount are required');
+        return;
+    }
+
+    const payload = {
+        type: 'payment',
+        linkedTransactionId: invoiceId || null,
+        party,
+        date,
+        amount: round2(amount),
+        mode,
+        reference,
+        narration
+    };
+
+    if (state.editingPaymentId) {
+        const idx = state.bankEntries.findIndex(b => b.id === state.editingPaymentId);
+        if (idx !== -1) {
+            state.bankEntries[idx] = { ...state.bankEntries[idx], ...payload };
+            saveDataToStorage();
+            alert('Payment updated successfully!');
+        }
+        state.editingPaymentId = null;
+        hidePaymentForm();
+        renderApp();
+        return;
+    }
+
+    addBankEntry(payload);
+    hidePaymentForm();
+}
+
+// ---- Invoice Generation (linked to Sales) ----
+
+function renderInvoicesPage() {
+    const sales = state.transactions.filter(t => t.type === 'sales').slice().reverse();
+    const c = state.company;
+    
+    return `
+        <h2 class="page-title">Invoice Generation</h2>
+        <div class="card" style="font-size: 13px; color: #475569; display: flex; align-items: center; gap: 12px;">
+            ${c.logoDataUrl ? `<img src="${c.logoDataUrl}" alt="Logo" style="height: 36px; max-width: 120px; object-fit: contain;">` : ''}
+            <div>
+                <strong>${c.name}</strong> ${c.gstin ? '· GSTIN: ' + c.gstin : ''} ${c.state ? '· ' + c.state : ''}
+                ${!c.gstin ? '<span style="color:#991b1b;"> — add GSTIN/address/logo in Settings for legally compliant invoices.</span>' : ''}
+                ${state.currentUser.role === 'admin' ? ' <a href="#" onclick="goToPage(\'settings\'); return false;" style="color:#2563eb;">Edit in Settings →</a>' : ''}
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">Generated Invoices (from Sales Entries)</h3>
+            ${sales.length === 0 ? '<p class="empty-state">No sales entries yet. Save a sale on the Sales tab to generate its invoice here.</p>' : `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th style="text-align: right;">Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sales.map(t => `
+                            <tr>
+                                <td><strong>${t.invoiceNo || '-'}</strong></td>
+                                <td>${t.date}</td>
+                                <td>${t.customer}</td>
+                                <td style="text-align: right;">₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="viewInvoice('${t.id}')">View / Print</button>
+                                    <button class="btn" style="padding: 6px 12px; font-size: 12px; background-color: #25D366; color: white;" title="Send invoice to client on WhatsApp" onclick="shareInvoiceOnWhatsApp('${t.id}')">📱 WhatsApp</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `}
+        </div>
+        ${state.viewInvoiceId ? renderInvoiceModal(state.viewInvoiceId) : ''}
+    `;
+}
+
+// ---- Settings (Firm Details + Logo) — admin-only tab next to Users ----
+
+function renderSettingsPage() {
+    if (state.currentUser.role !== 'admin') {
+        return `<h2 class="page-title">Settings</h2><div class="card empty-state"><p>Only administrators can edit firm settings.</p></div>`;
+    }
+    const c = state.company;
+    return `
+        <h2 class="page-title">Settings</h2>
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">Firm Details (appear on every tax invoice)</h3>
+            <div class="form-grid">
+                <input type="text" id="co_name" placeholder="Firm Name" value="${c.name || ''}">
+                <input type="text" id="co_gstin" placeholder="GSTIN" value="${c.gstin || ''}">
+                <input type="text" id="co_pan" placeholder="PAN" value="${c.pan || ''}">
+                <select id="co_state" class="select-dropdown">
+                    ${INDIAN_STATES.map(s => `<option value="${s.name}" data-code="${s.code}" ${c.state === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+                <input type="text" id="co_email" placeholder="Email" value="${c.email || ''}">
+                <input type="text" id="co_phone" placeholder="Phone" value="${c.phone || ''}">
+                <input type="text" id="co_bank_name" placeholder="Bank Name" value="${c.bankName || ''}">
+                <input type="text" id="co_bank_account" placeholder="Bank Account No" value="${c.bankAccount || ''}">
+                <input type="text" id="co_bank_ifsc" placeholder="Bank IFSC" value="${c.bankIFSC || ''}">
+            </div>
+            <input type="text" id="co_address" placeholder="Registered Address" value="${c.address || ''}" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 16px;">
+            
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Firm Logo (shown on invoices)</label>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div id="logo_preview_box" style="width: 100px; height: 60px; border: 1px dashed #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc;">
+                        ${c.logoDataUrl ? `<img id="logo_preview_img" src="${c.logoDataUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<span style="font-size: 11px; color: #94a3b8;">No logo</span>'}
+                    </div>
+                    <input type="file" id="co_logo" accept="image/*" onchange="handleLogoUpload(event)">
+                    ${c.logoDataUrl ? '<button class="btn" style="background-color: #fecaca; color: #991b1b; padding: 6px 12px; font-size: 12px;" onclick="removeLogo()">Remove</button>' : ''}
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="saveCompanyForm()">Save Firm Details</button>
+        </div>
+    `;
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('Please choose an image file'); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        state.company.logoDataUrl = e.target.result;
+        saveDataToStorage();
+        renderApp();
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeLogo() {
+    state.company.logoDataUrl = '';
+    saveDataToStorage();
+    renderApp();
+}
+
+function saveCompanyForm() {
+    const stateSelect = document.getElementById('co_state');
+    state.company = {
+        ...state.company,
+        name: document.getElementById('co_name').value,
+        gstin: document.getElementById('co_gstin').value,
+        pan: document.getElementById('co_pan').value,
+        state: stateSelect.value,
+        stateCode: stateSelect.selectedOptions[0] ? stateSelect.selectedOptions[0].dataset.code || '' : '',
+        email: document.getElementById('co_email').value,
+        phone: document.getElementById('co_phone').value,
+        bankName: document.getElementById('co_bank_name').value,
+        bankAccount: document.getElementById('co_bank_account').value,
+        bankIFSC: document.getElementById('co_bank_ifsc').value,
+        address: document.getElementById('co_address').value
+    };
+    saveDataToStorage();
+    alert('Firm details saved.');
+    renderApp();
+}
+
+function viewInvoice(transId) {
+    state.viewInvoiceId = transId;
+    renderApp();
+}
+
+function closeInvoiceModal() {
+    state.viewInvoiceId = null;
+    renderApp();
+}
+
+function renderInvoiceModal(transId) {
+    const t = state.transactions.find(x => x.id === transId);
+    if (!t) return '';
+    const client = state.clients.find(c => c.id === t.clientId);
+    const c = state.company;
+    const taxable = t.taxableValue != null ? t.taxableValue : t.amount;
+    
+    return `
+        <div class="modal active">
+            <div class="modal-content invoice-modal-content">
+                <div class="invoice-doc" id="invoice_print_area">
+                    <div class="inv-header">
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            ${c.logoDataUrl ? `<img src="${c.logoDataUrl}" alt="Logo" style="height: 50px; max-width: 110px; object-fit: contain;">` : ''}
+                            <div>
+                                <div style="font-size: 18px; font-weight: bold;">${c.name || 'Firm Name'}</div>
+                                <div>${c.address || ''}</div>
+                                <div>${c.state ? 'State: ' + c.state : ''}</div>
+                                <div>${c.gstin ? 'GSTIN: ' + c.gstin : ''}${c.pan ? ' &nbsp; PAN: ' + c.pan : ''}</div>
+                                <div>${c.email || ''} ${c.phone ? '· ' + c.phone : ''}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div><strong>Invoice No:</strong> ${t.invoiceNo || '-'}</div>
+                            <div><strong>Date:</strong> ${t.date}</div>
+                            <div><strong>Place of Supply:</strong> ${client && client.state ? client.state : '-'}</div>
+                        </div>
+                    </div>
+                    <div class="inv-title">TAX INVOICE</div>
+                    <div class="inv-parties">
+                        <div class="box">
+                            <strong>Bill To:</strong><br>
+                            ${client ? client.name : t.customer}<br>
+                            ${client && client.address ? client.address + '<br>' : ''}
+                            ${client && client.gstNo ? 'GSTIN: ' + client.gstNo + '<br>' : ''}
+                            ${client && client.panNo ? 'PAN: ' + client.panNo + '<br>' : ''}
+                            ${client && client.state ? 'State: ' + client.state : ''}
+                        </div>
+                        <div class="box">
+                            <strong>Reference:</strong> ${t.reference || '-'}<br>
+                            <strong>Description:</strong> ${t.description || '-'}
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Description</th>
+                                <th>HSN/SAC</th>
+                                <th style="text-align: right;">Taxable Value</th>
+                                ${t.igst ? '<th style="text-align: right;">IGST</th>' : '<th style="text-align: right;">CGST</th><th style="text-align: right;">SGST</th>'}
+                                <th style="text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>${t.description || 'Services rendered'}</td>
+                                <td>${t.hsnCode || '-'}</td>
+                                <td style="text-align: right;">₹${parseFloat(taxable || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                                ${t.igst
+                                    ? `<td style="text-align: right;">₹${parseFloat(t.igst || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>`
+                                    : `<td style="text-align: right;">₹${parseFloat(t.cgst || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td><td style="text-align: right;">₹${parseFloat(t.sgst || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>`}
+                                <td style="text-align: right;">₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="inv-totals">
+                        <div><span>Taxable Value</span><span>₹${parseFloat(taxable || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></div>
+                        ${t.igst ? `<div><span>IGST${t.gstRate ? ' (' + t.gstRate + '%)' : ''}</span><span>₹${parseFloat(t.igst || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></div>`
+                            : `<div><span>CGST${t.gstRate ? ' (' + (t.gstRate / 2) + '%)' : ''}</span><span>₹${parseFloat(t.cgst || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></div>
+                               <div><span>SGST${t.gstRate ? ' (' + (t.gstRate / 2) + '%)' : ''}</span><span>₹${parseFloat(t.sgst || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></div>`}
+                        <div style="border-top: 1px solid #1e293b; margin-top: 4px; padding-top: 4px;"><strong>Grand Total</strong><strong>₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</strong></div>
+                    </div>
+                    <p style="margin-top: 8px; font-style: italic; font-size: 12px;">Amount in Words: ${amountToWords(t.amount)}</p>
+                    <div class="inv-footer">
+                        <div>
+                            ${c.bankName ? `Bank: ${c.bankName}<br>A/C: ${c.bankAccount || '-'}<br>IFSC: ${c.bankIFSC || '-'}` : ''}
+                        </div>
+                        <div style="text-align: right;">
+                            For ${c.name || 'the Firm'}<br><br><br>
+                            Authorized Signatory
+                        </div>
+                    </div>
+                    <p style="margin-top: 16px; font-size: 11px; color: #64748b;">This is a system-generated tax invoice under Rule 46 of the CGST Rules, 2017.</p>
+                </div>
+                <div class="modal-actions">
+                    <button onclick="printInvoice('${t.id}')" style="background-color: #2563eb; color: white;">Print / Download</button>
+                    <button onclick="shareInvoiceOnWhatsApp('${t.id}')" style="background-color: #25D366; color: white;">📱 Share on WhatsApp</button>
+                    <button onclick="closeInvoiceModal()" style="background-color: #e2e8f0; color: #475569;">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function printInvoice(transId) {
+    const content = document.getElementById('invoice_print_area').innerHTML;
+    const w = window.open('', '_blank');
+    w.document.write(`
+        <html><head><title>Invoice</title>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 24px; color: #1e293b; font-size: 13px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+            .inv-header { display: flex; justify-content: space-between; border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 12px; }
+            .inv-title { text-align: center; font-weight: bold; font-size: 16px; letter-spacing: 1px; margin: 12px 0; }
+            .inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; }
+            .inv-parties .box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; }
+            .inv-totals { margin-top: 8px; width: 100%; max-width: 320px; margin-left: auto; }
+            .inv-totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+            .inv-footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 12px; color: #475569; }
+        </style>
+        </head><body>${content}</body></html>
+    `);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 250);
+}
+
+// Sends the invoice summary as a WhatsApp message to the client's registered phone number
+// (WhatsApp's click-to-chat link supports pre-filled text only — the client still opens the
+// invoice/PDF from Print/Download; there is no way to auto-attach a file without WhatsApp Business API).
+function shareInvoiceOnWhatsApp(transId) {
+    const t = state.transactions.find(x => x.id === transId);
+    if (!t) return;
+    const client = state.clients.find(c => c.id === t.clientId);
+    const c = state.company;
+    const message = `Dear ${client ? client.name : t.customer},\n\n`
+        + `Greetings from ${c.name || 'our office'}.\n`
+        + `Please find your invoice details below:\n\n`
+        + `Invoice No: ${t.invoiceNo || '-'}\n`
+        + `Date: ${t.date}\n`
+        + `Amount: ₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}\n`
+        + `${t.description ? 'Particulars: ' + t.description + '\n' : ''}`
+        + `\nThank you for your business.`;
+    openWhatsAppShare(client ? client.phone : '', message, 'client');
+}
+
+
+function renderUsersPage() {
+    return `
+        <h2 class="page-title">User Management</h2>
+        <div class="action-bar">
+            <button class="btn btn-secondary" onclick="showUserModal()">+ Add User</button>
+        </div>
+        
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${state.users.map(u => `
+                        <tr>
+                            <td>${u.name}</td>
+                            <td>${u.email}</td>
+                            <td><span class="badge badge-blue">${u.role === 'admin' ? 'Administrator' : 'Operator'}</span></td>
+                            <td>${u.role === 'admin' ? '-' : `<button class="btn" style="background-color: #fecaca; color: #991b1b; padding: 4px 8px; font-size: 12px;" onclick="removeUser('${u.id}')">Remove</button>`}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function showUserModal() {
+    state.showUserModal = true;
+    renderApp();
+}
+
+function renderUserModal() {
+    return `
+        <div class="modal active">
+            <div class="modal-content">
+                <h2>Create New User</h2>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="user_name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="user_email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="user_password" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="user_role" class="select-dropdown">
+                        <option value="operator">Operator</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button onclick="closeUserModal()" style="background-color: #e2e8f0; color: #475569;">Cancel</button>
+                    <button onclick="submitUserForm()" style="background-color: #2563eb; color: white;">Create User</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function closeUserModal() {
+    state.showUserModal = false;
+    renderApp();
+}
+
+function submitUserForm() {
+    const name = document.getElementById('user_name').value;
+    const email = document.getElementById('user_email').value;
+    const password = document.getElementById('user_password').value;
+    const role = document.getElementById('user_role').value;
+    
+    addUser({ name, email, password, role });
+}
+
+// Initialize on load
+window.onload = initApp;
+</script>
+
+</body>
+</html>
