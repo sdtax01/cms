@@ -511,7 +511,129 @@
 
 <div id="app"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ---- Supabase configuration ----
+// Project: potuvnpapvjngbvlpcxf
+const SUPABASE_URL = 'https://potuvnpapvjngbvlpcxf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvdHV2bnBhcHZqbmdidmxwY3hmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0NDQxMjIsImV4cCI6MjEwNjAyMDEyMn0.AGxoL0BKRTTee0brB1LlsGMNAFypDtoa3rOqshyu-vc';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ---- DB <-> app field mapping (schema uses snake_case, app uses camelCase) ----
+function dbClientToApp(r) {
+    return {
+        id: r.id, name: r.name, email: r.email, phone: r.phone,
+        gstNo: r.gst_no, panNo: r.pan_no, state: r.state, stateCode: r.state_code,
+        address: r.address, createdDate: (r.created_at || '').split('T')[0]
+    };
+}
+function appClientToDb(c) {
+    return {
+        name: c.name, email: c.email, phone: c.phone,
+        gst_no: c.gstNo, pan_no: c.panNo, state: c.state, state_code: c.stateCode,
+        address: c.address
+    };
+}
+function dbTxnToApp(r) {
+    return {
+        id: r.id, type: r.type, clientId: r.client_id, vendorId: r.vendor_id,
+        customer: r.customer_name, vendor: r.vendor_name,
+        invoiceNo: r.invoice_no, hsnCode: r.hsn_code, date: r.date,
+        description: r.description, reference: r.reference,
+        taxableValue: r.taxable_value, gstRate: r.gst_rate,
+        cgst: r.cgst, sgst: r.sgst, igst: r.igst, gstAmount: r.gst_amount,
+        amount: r.amount, userId: r.created_by
+    };
+}
+function appTxnToDb(t) {
+    return {
+        type: t.type,
+        client_id: t.clientId || null,
+        vendor_id: t.vendorId || null,
+        customer_name: t.customer || null,
+        vendor_name: t.vendor || null,
+        invoice_no: t.invoiceNo || null,
+        hsn_code: t.hsnCode || null,
+        date: t.date,
+        description: t.description || null,
+        reference: t.reference || null,
+        taxable_value: t.taxableValue,
+        gst_rate: t.gstRate,
+        cgst: t.cgst, sgst: t.sgst, igst: t.igst,
+        gst_amount: t.gstAmount, amount: t.amount
+    };
+}
+function dbBankToApp(r) {
+    return {
+        id: r.id, type: r.type, linkedTransactionId: r.linked_transaction_id,
+        party: r.party, date: r.date, amount: r.amount, mode: r.mode,
+        reference: r.reference, narration: r.narration, userId: r.created_by
+    };
+}
+function appBankToDb(b) {
+    return {
+        type: b.type, linked_transaction_id: b.linkedTransactionId || null,
+        party: b.party, date: b.date, amount: b.amount, mode: b.mode,
+        reference: b.reference || null, narration: b.narration || null
+    };
+}
+function dbCompanyToApp(r) {
+    return {
+        name: r.name || '', address: r.address || '', gstin: r.gstin || '', pan: r.pan || '',
+        state: r.state || '', stateCode: r.state_code || '', email: r.email || '', phone: r.phone || '',
+        bankName: r.bank_name || '', bankAccount: r.bank_account || '', bankIFSC: r.bank_ifsc || '',
+        logoDataUrl: r.logo_url || ''
+    };
+}
+function appCompanyToDb(c) {
+    return {
+        name: c.name, address: c.address, gstin: c.gstin, pan: c.pan,
+        state: c.state, state_code: c.stateCode, email: c.email, phone: c.phone,
+        bank_name: c.bankName, bank_account: c.bankAccount, bank_ifsc: c.bankIFSC,
+        logo_url: c.logoDataUrl
+    };
+}
+function dbProfileToApp(r) {
+    return { id: r.id, name: r.name, email: r.email, role: r.role };
+}
+function currentUid() {
+    return (state.currentUser && state.currentUser.id) || null;
+}
+
+// ---- Bulk data load from Supabase (replaces old localStorage load) ----
+async function loadAppData() {
+    const [clientsRes, vendorsRes, txnRes, bankRes, companyRes, profilesRes] = await Promise.all([
+        sb.from('clients').select('*').order('created_at'),
+        sb.from('vendors').select('*').order('created_at'),
+        sb.from('transactions').select('*').order('date', { ascending: false }),
+        sb.from('bank_entries').select('*').order('date', { ascending: false }),
+        sb.from('company_settings').select('*').eq('id', 1).maybeSingle(),
+        sb.from('profiles').select('*').order('created_at')
+    ]);
+    [clientsRes, vendorsRes, txnRes, bankRes, companyRes, profilesRes].forEach(r => { if (r.error) console.error('Supabase load error:', r.error); });
+    state.clients = (clientsRes.data || []).map(dbClientToApp);
+    state.vendors = (vendorsRes.data || []).map(dbClientToApp);
+    state.transactions = (txnRes.data || []).map(dbTxnToApp);
+    state.bankEntries = (bankRes.data || []).map(dbBankToApp);
+    state.company = companyRes.data ? dbCompanyToApp(companyRes.data) : defaultCompany();
+    state.users = (profilesRes.data || []).map(dbProfileToApp);
+}
+
+async function setCurrentUserFromSession(authUser) {
+    const { data: profile, error } = await sb.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+    if (error || !profile) {
+        console.error('Could not load profile for signed-in user:', error);
+        alert('Signed in, but no staff profile was found for this account. Contact your administrator.');
+        await sb.auth.signOut();
+        return false;
+    }
+    state.currentUser = dbProfileToApp(profile);
+    state.currentPage = 'dashboard';
+    state.animateTabSwitch = true;
+    await loadAppData();
+    return true;
+}
+
 // Application State
 let state = {
     currentUser: null,
@@ -745,73 +867,39 @@ function amountToWords(num) {
 }
 
 // Initialize App
-function initApp() {
-    loadDataFromStorage();
-    if (!state.users.length) {
-        // Default administrator account. Not shown on the login screen for security;
-        // share these credentials with the first admin out-of-band.
-        state.users = [
-            {
-                id: 'user1',
-                name: 'Admin User',
-                email: 'admin@shreedigitax.com',
-                password: 'admin123',
-                role: 'admin'
-            }
-        ];
-        saveDataToStorage();
-    }
-    if (!state.company) {
-        state.company = defaultCompany();
-        saveDataToStorage();
-    }
+async function initApp() {
     if (!state.dashboardFilter || !state.dashboardFilter.fy) {
         state.dashboardFilter = { periodType: 'monthly', fy: defaultDashboardFY() };
     }
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && session.user) {
+        await setCurrentUserFromSession(session.user);
+    }
     renderApp();
-}
 
-// Storage Management
-function saveDataToStorage() {
-    localStorage.setItem('sdtx_users', JSON.stringify(state.users));
-    localStorage.setItem('sdtx_clients', JSON.stringify(state.clients));
-    localStorage.setItem('sdtx_vendors', JSON.stringify(state.vendors));
-    localStorage.setItem('sdtx_transactions', JSON.stringify(state.transactions));
-    localStorage.setItem('sdtx_company', JSON.stringify(state.company));
-    localStorage.setItem('sdtx_bank_entries', JSON.stringify(state.bankEntries));
-}
-
-function loadDataFromStorage() {
-    const users = localStorage.getItem('sdtx_users');
-    const clients = localStorage.getItem('sdtx_clients');
-    const vendors = localStorage.getItem('sdtx_vendors');
-    const transactions = localStorage.getItem('sdtx_transactions');
-    const company = localStorage.getItem('sdtx_company');
-    const bankEntries = localStorage.getItem('sdtx_bank_entries');
-    
-    if (users) state.users = JSON.parse(users);
-    if (clients) state.clients = JSON.parse(clients);
-    if (vendors) state.vendors = JSON.parse(vendors);
-    if (transactions) state.transactions = JSON.parse(transactions);
-    if (company) state.company = JSON.parse(company);
-    if (bankEntries) state.bankEntries = JSON.parse(bankEntries);
+    sb.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') {
+            state.currentUser = null;
+            state.currentPage = 'login';
+            renderApp();
+        }
+    });
 }
 
 // Login Handler
-function handleLogin(email, password) {
-    const user = state.users.find(u => u.email === email && u.password === password);
-    if (user) {
-        state.currentUser = user;
-        state.currentPage = 'dashboard';
-        state.animateTabSwitch = true;
-        renderApp();
-    } else {
+async function handleLogin(email, password) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
         alert('Invalid email or password');
+        return;
     }
+    const ok = await setCurrentUserFromSession(data.user);
+    if (ok) renderApp();
 }
 
 // Logout Handler
-function handleLogout() {
+async function handleLogout() {
+    await sb.auth.signOut();
     state.currentUser = null;
     state.currentPage = 'login';
     renderApp();
@@ -836,58 +924,63 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Add Client
-function addClient(data) {
-    const client = {
-        id: 'client_' + Date.now(),
-        ...data,
-        createdDate: new Date().toISOString().split('T')[0]
-    };
-    state.clients.push(client);
-    saveDataToStorage();
+async function addClient(data) {
+    const row = { ...appClientToDb(data), created_by: currentUid() };
+    const { data: inserted, error } = await sb.from('clients').insert(row).select().single();
+    if (error) { alert('Error adding client: ' + error.message); return; }
+    state.clients.push(dbClientToApp(inserted));
     alert('Client added successfully!');
     renderApp();
 }
 
 // Add Vendor/Supplier — kept in a separate list from Clients so a party
 // created for Purchase entries never shows up in the Sales customer dropdown, and vice versa.
-function addVendor(data) {
-    const vendor = {
-        id: 'vendor_' + Date.now(),
-        ...data,
-        createdDate: new Date().toISOString().split('T')[0]
-    };
-    state.vendors.push(vendor);
-    saveDataToStorage();
+async function addVendor(data) {
+    const row = { ...appClientToDb(data), created_by: currentUid() };
+    const { data: inserted, error } = await sb.from('vendors').insert(row).select().single();
+    if (error) { alert('Error adding vendor: ' + error.message); return; }
+    state.vendors.push(dbClientToApp(inserted));
     alert('Vendor added successfully!');
     renderApp();
 }
 
 // Add Transaction
-function addTransaction(data) {
-    const transaction = {
-        id: 'trans_' + Date.now(),
-        ...data,
-        date: data.date || new Date().toISOString().split('T')[0],
-        userId: state.currentUser.id
-    };
-    state.transactions.push(transaction);
-    saveDataToStorage();
+async function addTransaction(data) {
+    const row = { ...appTxnToDb({ ...data, date: data.date || new Date().toISOString().split('T')[0] }), created_by: currentUid() };
+    const { data: inserted, error } = await sb.from('transactions').insert(row).select().single();
+    if (error) { alert('Error recording transaction: ' + error.message); return; }
+    state.transactions.push(dbTxnToApp(inserted));
     alert('Transaction recorded successfully!');
     renderApp();
 }
 
-// Add User
-function addUser(data) {
+// Add User (staff account). Creates a real Supabase Auth login via signUp(), then
+// (if needed) promotes the resulting profile to admin. NOTE: if your Supabase project
+// has "Confirm email" enabled (the default), the new person must click the confirmation
+// link in their email before they can sign in — the account and password are created
+// immediately either way.
+async function addUser(data) {
     if (!data.name || !data.email || !data.password) {
         alert('All fields are required');
         return;
     }
-    const newUser = {
-        id: 'user_' + Date.now(),
-        ...data
-    };
-    state.users.push(newUser);
-    saveDataToStorage();
+    const { data: { session: adminSession } } = await sb.auth.getSession();
+    const { data: signUpData, error } = await sb.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: { data: { name: data.name } }
+    });
+    if (error) { alert('Error creating user: ' + error.message); return; }
+    // signUp() can switch the browser's active session to the new user when email
+    // confirmation is disabled on the project — switch the admin's session back.
+    if (adminSession) {
+        await sb.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token });
+    }
+    if (data.role === 'admin' && signUpData.user) {
+        const { error: roleErr } = await sb.from('profiles').update({ role: 'admin' }).eq('id', signUpData.user.id);
+        if (roleErr) console.error('Could not set admin role:', roleErr);
+    }
+    await loadAppData();
     state.showUserModal = false;
     alert('User created: ' + data.email);
     renderApp();
@@ -915,12 +1008,16 @@ function exportData(data, filename) {
 }
 
 // Remove User
-function removeUser(userId) {
-    if (confirm('Remove this user?')) {
-        state.users = state.users.filter(u => u.id !== userId);
-        saveDataToStorage();
-        renderApp();
-    }
+// NOTE: this removes their staff profile (so they lose in-app access to firm data and
+// disappear from the Users tab), but the underlying Supabase Auth account itself can only
+// be fully deleted with the service-role key from the Supabase Dashboard, not from this
+// anon-key browser app.
+async function removeUser(userId) {
+    if (!confirm('Remove this user?')) return;
+    const { error } = await sb.from('profiles').delete().eq('id', userId);
+    if (error) { alert('Error removing user: ' + error.message); return; }
+    state.users = state.users.filter(u => u.id !== userId);
+    renderApp();
 }
 
 // Render Main App
@@ -957,11 +1054,11 @@ function renderLoginPage() {
     `;
 }
 
-function handleLoginForm(e) {
+async function handleLoginForm(e) {
     e.preventDefault();
     const email = document.getElementById('login_email').value;
     const password = document.getElementById('login_password').value;
-    handleLogin(email, password);
+    await handleLogin(email, password);
 }
 
 // Dashboard
@@ -1333,13 +1430,14 @@ function importClients(event) {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const text = e.target.result;
             const rows = text.split('\n').filter(r => r.trim());
             const headers = rows[0].split(',');
-            
-            rows.slice(1).forEach((row, idx) => {
+            const newRows = [];
+
+            rows.slice(1).forEach((row) => {
                 const values = row.split(',');
                 const obj = {};
                 headers.forEach((h, i) => {
@@ -1347,21 +1445,25 @@ function importClients(event) {
                 });
                 
                 if (obj.name || obj.Name) {
-                    state.clients.push({
-                        id: 'client_' + Date.now() + idx,
-                        name: obj.name || obj.Name || '',
-                        email: obj.email || obj.Email || '',
-                        phone: obj.phone || obj.Phone || '',
-                        gstNo: obj.gstNo || obj['GST No'] || '',
-                        panNo: obj.panNo || obj['PAN No'] || '',
-                        state: obj.state || obj.State || '',
-                        stateCode: (INDIAN_STATES.find(s => s.name === (obj.state || obj.State)) || {}).code || '',
-                        address: obj.address || obj.Address || '',
-                        createdDate: new Date().toISOString().split('T')[0]
+                    newRows.push({
+                        ...appClientToDb({
+                            name: obj.name || obj.Name || '',
+                            email: obj.email || obj.Email || '',
+                            phone: obj.phone || obj.Phone || '',
+                            gstNo: obj.gstNo || obj['GST No'] || '',
+                            panNo: obj.panNo || obj['PAN No'] || '',
+                            state: obj.state || obj.State || '',
+                            stateCode: (INDIAN_STATES.find(s => s.name === (obj.state || obj.State)) || {}).code || '',
+                            address: obj.address || obj.Address || ''
+                        }),
+                        created_by: currentUid()
                     });
                 }
             });
-            saveDataToStorage();
+            if (!newRows.length) { alert('No valid rows found to import'); return; }
+            const { data: inserted, error } = await sb.from('clients').insert(newRows).select();
+            if (error) { alert('Error importing clients: ' + error.message); return; }
+            state.clients.push(...inserted.map(dbClientToApp));
             alert('Clients imported successfully!');
             renderApp();
         } catch (err) {
@@ -1485,13 +1587,14 @@ function importVendors(event) {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const text = e.target.result;
             const rows = text.split('\n').filter(r => r.trim());
             const headers = rows[0].split(',');
+            const newRows = [];
             
-            rows.slice(1).forEach((row, idx) => {
+            rows.slice(1).forEach((row) => {
                 const values = row.split(',');
                 const obj = {};
                 headers.forEach((h, i) => {
@@ -1499,21 +1602,25 @@ function importVendors(event) {
                 });
                 
                 if (obj.name || obj.Name) {
-                    state.vendors.push({
-                        id: 'vendor_' + Date.now() + idx,
-                        name: obj.name || obj.Name || '',
-                        email: obj.email || obj.Email || '',
-                        phone: obj.phone || obj.Phone || '',
-                        gstNo: obj.gstNo || obj['GST No'] || '',
-                        panNo: obj.panNo || obj['PAN No'] || '',
-                        state: obj.state || obj.State || '',
-                        stateCode: (INDIAN_STATES.find(s => s.name === (obj.state || obj.State)) || {}).code || '',
-                        address: obj.address || obj.Address || '',
-                        createdDate: new Date().toISOString().split('T')[0]
+                    newRows.push({
+                        ...appClientToDb({
+                            name: obj.name || obj.Name || '',
+                            email: obj.email || obj.Email || '',
+                            phone: obj.phone || obj.Phone || '',
+                            gstNo: obj.gstNo || obj['GST No'] || '',
+                            panNo: obj.panNo || obj['PAN No'] || '',
+                            state: obj.state || obj.State || '',
+                            stateCode: (INDIAN_STATES.find(s => s.name === (obj.state || obj.State)) || {}).code || '',
+                            address: obj.address || obj.Address || ''
+                        }),
+                        created_by: currentUid()
                     });
                 }
             });
-            saveDataToStorage();
+            if (!newRows.length) { alert('No valid rows found to import'); return; }
+            const { data: inserted, error } = await sb.from('vendors').insert(newRows).select();
+            if (error) { alert('Error importing vendors: ' + error.message); return; }
+            state.vendors.push(...inserted.map(dbClientToApp));
             alert('Vendors imported successfully!');
             renderApp();
         } catch (err) {
@@ -1675,7 +1782,7 @@ function updatePurchaseGstPreview() {
         : `IGST ₹${split.igst.toLocaleString('en-IN')} | Total (ITC eligible): ₹${round2(parseFloat(taxable) + split.gstAmount).toLocaleString('en-IN')}`;
 }
 
-function submitPurchaseForm() {
+async function submitPurchaseForm() {
     const vendorId = document.getElementById('purchase_vendor').value;
     const vendor = state.vendors.find(v => v.id === vendorId);
     const taxable = document.getElementById('purchase_taxable').value;
@@ -1710,8 +1817,9 @@ function submitPurchaseForm() {
     if (state.editingPurchaseId) {
         const idx = state.transactions.findIndex(t => t.id === state.editingPurchaseId);
         if (idx !== -1) {
-            state.transactions[idx] = { ...state.transactions[idx], ...payload };
-            saveDataToStorage();
+            const { data: updated, error } = await sb.from('transactions').update(appTxnToDb(payload)).eq('id', state.editingPurchaseId).select().single();
+            if (error) { alert('Error updating purchase entry: ' + error.message); return; }
+            state.transactions[idx] = dbTxnToApp(updated);
             alert('Purchase entry updated successfully!');
         }
         state.editingPurchaseId = null;
@@ -1720,7 +1828,7 @@ function submitPurchaseForm() {
         return;
     }
     
-    addTransaction(payload);
+    await addTransaction(payload);
     hidePurchaseForm();
 }
 
@@ -1729,13 +1837,15 @@ function importPurchases(event) {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const text = e.target.result;
             const rows = text.split('\n').filter(r => r.trim());
             const headers = rows[0].split(',');
+            const newRows = [];
+            let skipped = 0;
             
-            rows.slice(1).forEach((row, idx) => {
+            rows.slice(1).forEach((row) => {
                 const values = row.split(',');
                 const obj = {};
                 headers.forEach((h, i) => {
@@ -1745,27 +1855,33 @@ function importPurchases(event) {
                 const vendorName = obj.vendor || obj.Vendor || '';
                 if (vendorName) {
                     const matchedVendor = state.vendors.find(v => v.name.toLowerCase() === vendorName.toLowerCase());
+                    if (!matchedVendor) { skipped++; return; } // vendor_id is required by the database schema
                     const taxableValue = parseFloat(obj.taxableValue || obj['Taxable Value'] || obj.amount || obj.Amount || 0);
                     const gstAmount = parseFloat(obj.gstAmount || obj['GST Amount'] || 0);
-                    state.transactions.push({
-                        id: 'trans_' + Date.now() + idx,
-                        type: 'purchase',
-                        date: new Date().toISOString().split('T')[0],
-                        vendorId: matchedVendor ? matchedVendor.id : null,
-                        vendor: vendorName,
-                        taxableValue: round2(taxableValue),
-                        gstAmount: round2(gstAmount),
-                        cgst: 0, sgst: 0, igst: round2(gstAmount),
-                        amount: round2(taxableValue + gstAmount),
-                        invoiceNo: obj.invoiceNo || obj['Invoice No'] || '',
-                        reference: obj.reference || obj.Reference || '',
-                        description: obj.description || obj.Description || '',
-                        userId: state.currentUser.id
+                    newRows.push({
+                        ...appTxnToDb({
+                            type: 'purchase',
+                            date: new Date().toISOString().split('T')[0],
+                            vendorId: matchedVendor.id,
+                            vendor: vendorName,
+                            taxableValue: round2(taxableValue),
+                            gstRate: 0,
+                            gstAmount: round2(gstAmount),
+                            cgst: 0, sgst: 0, igst: round2(gstAmount),
+                            amount: round2(taxableValue + gstAmount),
+                            invoiceNo: obj.invoiceNo || obj['Invoice No'] || '',
+                            reference: obj.reference || obj.Reference || '',
+                            description: obj.description || obj.Description || ''
+                        }),
+                        created_by: currentUid()
                     });
                 }
             });
-            saveDataToStorage();
-            alert('Purchases imported successfully!');
+            if (!newRows.length) { alert(skipped ? `No rows imported — ${skipped} row(s) skipped (vendor name did not match an existing vendor).` : 'No valid rows found to import'); return; }
+            const { data: inserted, error } = await sb.from('transactions').insert(newRows).select();
+            if (error) { alert('Error importing purchases: ' + error.message); return; }
+            state.transactions.push(...inserted.map(dbTxnToApp));
+            alert('Purchases imported successfully!' + (skipped ? ` (${skipped} row(s) skipped — vendor not found)` : ''));
             renderApp();
         } catch (err) {
             alert('Error importing file: ' + err.message);
@@ -1933,7 +2049,7 @@ function nextInvoiceNumber() {
     return `INV/${year}/${String(count).padStart(4, '0')}`;
 }
 
-function submitSalesForm() {
+async function submitSalesForm() {
     const clientId = document.getElementById('sales_customer').value;
     const client = state.clients.find(c => c.id === clientId);
     const taxable = document.getElementById('sales_taxable').value;
@@ -1970,8 +2086,9 @@ function submitSalesForm() {
     if (state.editingSalesId) {
         const idx = state.transactions.findIndex(t => t.id === state.editingSalesId);
         if (idx !== -1) {
-            state.transactions[idx] = { ...state.transactions[idx], ...payload };
-            saveDataToStorage();
+            const { data: updated, error } = await sb.from('transactions').update(appTxnToDb(payload)).eq('id', state.editingSalesId).select().single();
+            if (error) { alert('Error updating sales entry: ' + error.message); return; }
+            state.transactions[idx] = dbTxnToApp(updated);
             alert('Sales entry updated successfully!');
         }
         state.editingSalesId = null;
@@ -1980,7 +2097,7 @@ function submitSalesForm() {
         return;
     }
     
-    addTransaction(payload);
+    await addTransaction(payload);
     hideSalesForm();
 }
 
@@ -1989,13 +2106,15 @@ function importSales(event) {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const text = e.target.result;
             const rows = text.split('\n').filter(r => r.trim());
             const headers = rows[0].split(',');
+            const newRows = [];
+            let skipped = 0;
             
-            rows.slice(1).forEach((row, idx) => {
+            rows.slice(1).forEach((row) => {
                 const values = row.split(',');
                 const obj = {};
                 headers.forEach((h, i) => {
@@ -2005,27 +2124,33 @@ function importSales(event) {
                 const customerName = obj.customer || obj.Customer || '';
                 if (customerName) {
                     const matchedClient = state.clients.find(c => c.name.toLowerCase() === customerName.toLowerCase());
+                    if (!matchedClient) { skipped++; return; } // client_id is required by the database schema
                     const taxableValue = parseFloat(obj.taxableValue || obj['Taxable Value'] || obj.amount || obj.Amount || 0);
                     const gstAmount = parseFloat(obj.gstAmount || obj['GST Amount'] || 0);
-                    state.transactions.push({
-                        id: 'trans_' + Date.now() + idx,
-                        type: 'sales',
-                        date: new Date().toISOString().split('T')[0],
-                        clientId: matchedClient ? matchedClient.id : null,
-                        customer: customerName,
-                        taxableValue: round2(taxableValue),
-                        gstAmount: round2(gstAmount),
-                        cgst: 0, sgst: 0, igst: round2(gstAmount),
-                        amount: round2(taxableValue + gstAmount),
-                        invoiceNo: obj.invoiceNo || obj['Invoice No'] || nextInvoiceNumber(),
-                        reference: obj.reference || obj.Reference || '',
-                        description: obj.description || obj.Description || '',
-                        userId: state.currentUser.id
+                    newRows.push({
+                        ...appTxnToDb({
+                            type: 'sales',
+                            date: new Date().toISOString().split('T')[0],
+                            clientId: matchedClient.id,
+                            customer: customerName,
+                            taxableValue: round2(taxableValue),
+                            gstRate: 0,
+                            gstAmount: round2(gstAmount),
+                            cgst: 0, sgst: 0, igst: round2(gstAmount),
+                            amount: round2(taxableValue + gstAmount),
+                            invoiceNo: obj.invoiceNo || obj['Invoice No'] || nextInvoiceNumber(),
+                            reference: obj.reference || obj.Reference || '',
+                            description: obj.description || obj.Description || ''
+                        }),
+                        created_by: currentUid()
                     });
                 }
             });
-            saveDataToStorage();
-            alert('Sales imported successfully!');
+            if (!newRows.length) { alert(skipped ? `No rows imported — ${skipped} row(s) skipped (customer name did not match an existing client).` : 'No valid rows found to import'); return; }
+            const { data: inserted, error } = await sb.from('transactions').insert(newRows).select();
+            if (error) { alert('Error importing sales: ' + error.message); return; }
+            state.transactions.push(...inserted.map(dbTxnToApp));
+            alert('Sales imported successfully!' + (skipped ? ` (${skipped} row(s) skipped — customer not found)` : ''));
             renderApp();
         } catch (err) {
             alert('Error importing file: ' + err.message);
@@ -2406,15 +2531,12 @@ function renderPaymentsSection(payments) {
     `;
 }
 
-function addBankEntry(data) {
-    const entry = {
-        id: 'bank_' + Date.now(),
-        ...data,
-        userId: state.currentUser.id
-    };
+async function addBankEntry(data) {
+    const row = { ...appBankToDb(data), created_by: currentUid() };
+    const { data: inserted, error } = await sb.from('bank_entries').insert(row).select().single();
+    if (error) { alert('Error recording entry: ' + error.message); return; }
     if (!state.bankEntries) state.bankEntries = [];
-    state.bankEntries.push(entry);
-    saveDataToStorage();
+    state.bankEntries.push(dbBankToApp(inserted));
     alert(data.type === 'receipt' ? 'Receipt recorded successfully!' : 'Payment recorded successfully!');
     renderApp();
 }
@@ -2479,7 +2601,7 @@ function editReceiptEntry(id) {
     document.getElementById('receipt-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function submitReceiptForm() {
+async function submitReceiptForm() {
     const invoiceId = document.getElementById('receipt_invoice').value;
     const party = document.getElementById('receipt_party').value;
     const date = document.getElementById('receipt_date').value || new Date().toISOString().split('T')[0];
@@ -2507,8 +2629,9 @@ function submitReceiptForm() {
     if (state.editingReceiptId) {
         const idx = state.bankEntries.findIndex(b => b.id === state.editingReceiptId);
         if (idx !== -1) {
-            state.bankEntries[idx] = { ...state.bankEntries[idx], ...payload };
-            saveDataToStorage();
+            const { data: updated, error } = await sb.from('bank_entries').update(appBankToDb(payload)).eq('id', state.editingReceiptId).select().single();
+            if (error) { alert('Error updating receipt: ' + error.message); return; }
+            state.bankEntries[idx] = dbBankToApp(updated);
             alert('Receipt updated successfully!');
         }
         state.editingReceiptId = null;
@@ -2517,7 +2640,7 @@ function submitReceiptForm() {
         return;
     }
 
-    addBankEntry(payload);
+    await addBankEntry(payload);
     hideReceiptForm();
 }
 
@@ -2581,7 +2704,7 @@ function editPaymentEntry(id) {
     document.getElementById('payment-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function submitPaymentForm() {
+async function submitPaymentForm() {
     const invoiceId = document.getElementById('payment_invoice').value;
     const party = document.getElementById('payment_party').value;
     const date = document.getElementById('payment_date').value || new Date().toISOString().split('T')[0];
@@ -2609,8 +2732,9 @@ function submitPaymentForm() {
     if (state.editingPaymentId) {
         const idx = state.bankEntries.findIndex(b => b.id === state.editingPaymentId);
         if (idx !== -1) {
-            state.bankEntries[idx] = { ...state.bankEntries[idx], ...payload };
-            saveDataToStorage();
+            const { data: updated, error } = await sb.from('bank_entries').update(appBankToDb(payload)).eq('id', state.editingPaymentId).select().single();
+            if (error) { alert('Error updating payment: ' + error.message); return; }
+            state.bankEntries[idx] = dbBankToApp(updated);
             alert('Payment updated successfully!');
         }
         state.editingPaymentId = null;
@@ -2619,7 +2743,7 @@ function submitPaymentForm() {
         return;
     }
 
-    addBankEntry(payload);
+    await addBankEntry(payload);
     hidePaymentForm();
 }
 
@@ -2721,23 +2845,25 @@ function handleLogoUpload(event) {
     if (!file) return;
     if (!file.type.startsWith('image/')) { alert('Please choose an image file'); return; }
     const reader = new FileReader();
-    reader.onload = function(e) {
-        state.company.logoDataUrl = e.target.result;
-        saveDataToStorage();
+    reader.onload = async function(e) {
+        const { data: row, error } = await sb.from('company_settings').update({ logo_url: e.target.result }).eq('id', 1).select().single();
+        if (error) { alert('Error saving logo: ' + error.message); return; }
+        state.company = dbCompanyToApp(row);
         renderApp();
     };
     reader.readAsDataURL(file);
 }
 
-function removeLogo() {
-    state.company.logoDataUrl = '';
-    saveDataToStorage();
+async function removeLogo() {
+    const { data: row, error } = await sb.from('company_settings').update({ logo_url: null }).eq('id', 1).select().single();
+    if (error) { alert('Error removing logo: ' + error.message); return; }
+    state.company = dbCompanyToApp(row);
     renderApp();
 }
 
-function saveCompanyForm() {
+async function saveCompanyForm() {
     const stateSelect = document.getElementById('co_state');
-    state.company = {
+    const updatedCompany = {
         ...state.company,
         name: document.getElementById('co_name').value,
         gstin: document.getElementById('co_gstin').value,
@@ -2751,7 +2877,9 @@ function saveCompanyForm() {
         bankIFSC: document.getElementById('co_bank_ifsc').value,
         address: document.getElementById('co_address').value
     };
-    saveDataToStorage();
+    const { data: row, error } = await sb.from('company_settings').update(appCompanyToDb(updatedCompany)).eq('id', 1).select().single();
+    if (error) { alert('Error saving firm details: ' + error.message); return; }
+    state.company = dbCompanyToApp(row);
     alert('Firm details saved.');
     renderApp();
 }
@@ -2981,13 +3109,13 @@ function closeUserModal() {
     renderApp();
 }
 
-function submitUserForm() {
+async function submitUserForm() {
     const name = document.getElementById('user_name').value;
     const email = document.getElementById('user_email').value;
     const password = document.getElementById('user_password').value;
     const role = document.getElementById('user_role').value;
     
-    addUser({ name, email, password, role });
+    await addUser({ name, email, password, role });
 }
 
 // Initialize on load
