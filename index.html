@@ -402,6 +402,13 @@
             gap: 16px;
             margin-bottom: 24px;
         }
+        .ageing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 16px;
+        }
+        .ageing-grid .card { margin-bottom: 0; }
+        .ageing-grid { margin-bottom: 20px; }
         .chart-box {
             position: relative;
             height: 280px;
@@ -1194,6 +1201,11 @@ function renderDashboardPage() {
             <div class="chart-box" style="height: 360px;">${renderTrendChartSVG(getTrendData(state.dashboardFilter))}</div>
         </div>
         
+        <div class="ageing-grid">
+            ${renderAgeingCard('purchase')}
+            ${renderAgeingCard('sales')}
+        </div>
+
         <div class="card">
             <h3 style="margin-bottom: 16px; font-size: 18px;">Recent Transactions</h3>
             ${recent.length === 0 ? '<p style="color: #64748b;">No transactions yet</p>' : `
@@ -1314,6 +1326,89 @@ function renderTrendChartSVG(data) {
         <div style="display: flex; gap: 20px; justify-content: center; font-size: 13px; height: 26px; align-items: center;">
             <span style="color: #16a34a; font-weight: 600;">● Sales</span>
             <span style="color: #dc2626; font-weight: 600;">● Purchases</span>
+        </div>
+    `;
+}
+
+// --- Ageing (Payable / Receivable) ---
+// No due-date field exists on invoices, so ageing is measured from the invoice date.
+// Outstanding per invoice = invoice amount - linked payments (purchases) / receipts (sales).
+const AGEING_BUCKETS = [
+    { label: '0-30 days', min: 0, max: 30, color: '#16a34a' },
+    { label: '31-60 days', min: 31, max: 60, color: '#eab308' },
+    { label: '61-90 days', min: 61, max: 90, color: '#f97316' },
+    { label: '90+ days', min: 91, max: Infinity, color: '#dc2626' }
+];
+
+function getAgeingData(type) {
+    const isPurchase = type === 'purchase';
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const buckets = AGEING_BUCKETS.map(b => ({ ...b, amount: 0, count: 0 }));
+    let total = 0, settled = 0, outstanding = 0;
+    state.transactions.filter(t => t.type === type).forEach(t => {
+        const amt = parseFloat(t.amount) || 0;
+        const done = isPurchase ? invoicePaidAmount(t.id) : invoiceReceivedAmount(t.id);
+        const due = round2(amt - done);
+        total += amt;
+        settled += Math.min(done, amt);
+        if (due <= 0.005) return;
+        outstanding += due;
+        const d = t.date ? new Date(t.date) : today;
+        const age = Math.max(0, Math.floor((today - d) / 86400000));
+        const b = buckets.find(x => age >= x.min && age <= x.max) || buckets[buckets.length - 1];
+        b.amount = round2(b.amount + due);
+        b.count += 1;
+    });
+    return { buckets, total: round2(total), settled: round2(settled), outstanding: round2(outstanding) };
+}
+
+function renderAgeingChartSVG(data) {
+    if (data.outstanding <= 0) {
+        return `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#94a3b8; font-size:14px;">No outstanding invoices</div>`;
+    }
+    const width = 600, height = 280;
+    const pl = 64, pr = 16, pt = 16, pb = 56;
+    const cw = width - pl - pr, ch = height - pt - pb;
+    const niceMax = niceCeiling(Math.max(...data.buckets.map(b => b.amount)));
+    const yFor = v => pt + ch - (v / niceMax) * ch;
+    const slot = cw / data.buckets.length, barW = Math.min(64, slot * 0.6);
+    let svg = '';
+    for (let g = 0; g <= 5; g++) {
+        const v = (niceMax / 5) * g, y = yFor(v);
+        svg += `<line x1="${pl}" y1="${y.toFixed(1)}" x2="${width - pr}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" />`;
+        svg += `<text x="${pl - 8}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#64748b" text-anchor="end">₹${formatCompactINR(v)}</text>`;
+    }
+    data.buckets.forEach((b, i) => {
+        const x = pl + i * slot + (slot - barW) / 2;
+        const y = yFor(b.amount);
+        svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0, pl > 0 ? (pt + ch - y) : 0).toFixed(1)}" fill="${b.color}" rx="3"><title>${b.label}: ₹${b.amount.toLocaleString('en-IN')} (${b.count} invoice${b.count === 1 ? '' : 's'})</title></rect>`;
+        if (b.amount > 0) svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" font-size="11" fill="#334155" text-anchor="middle" font-weight="600">₹${formatCompactINR(b.amount)}</text>`;
+        svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${height - pb + 18}" font-size="11" fill="#64748b" text-anchor="middle">${b.label}</text>`;
+        svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${height - pb + 32}" font-size="10" fill="#94a3b8" text-anchor="middle">${b.count} inv</text>`;
+    });
+    svg += `<line x1="${pl}" y1="${pt}" x2="${pl}" y2="${pt + ch}" stroke="#cbd5e1" /><line x1="${pl}" y1="${pt + ch}" x2="${width - pr}" y2="${pt + ch}" stroke="#cbd5e1" />`;
+    return `<svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%;" preserveAspectRatio="xMidYMid meet">${svg}</svg>`;
+}
+
+function renderAgeingCard(type) {
+    const isPurchase = type === 'purchase';
+    const d = getAgeingData(type);
+    const fmt = v => '₹' + v.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    const title = isPurchase ? 'Payable Report with Ageing' : 'Receivable Report with Ageing';
+    const l1 = isPurchase ? 'Purchases' : 'Sales';
+    const l2 = isPurchase ? 'Payments Made' : 'Receipts Received';
+    const l3 = isPurchase ? 'Payment Payable' : 'Payment Receivable';
+    const c1 = isPurchase ? '#ea580c' : '#16a34a';
+    return `
+        <div class="card">
+            <h3 style="font-size: 16px; margin-bottom: 4px;">${title}</h3>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">${l1} vs ${l2} — ageing of outstanding balance from invoice date</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+                <div style="flex: 1; min-width: 110px;"><div style="font-size: 12px; color: #64748b;">${l1}</div><div style="font-size: 18px; font-weight: 700; color: ${c1};">${fmt(d.total)}</div></div>
+                <div style="flex: 1; min-width: 110px;"><div style="font-size: 12px; color: #64748b;">${l2}</div><div style="font-size: 18px; font-weight: 700; color: #2563eb;">${fmt(d.settled)}</div></div>
+                <div style="flex: 1; min-width: 110px;"><div style="font-size: 12px; color: #64748b;">${l3}</div><div style="font-size: 18px; font-weight: 700; color: #dc2626;">${fmt(d.outstanding)}</div></div>
+            </div>
+            <div class="chart-box" style="height: 280px;">${renderAgeingChartSVG(d)}</div>
         </div>
     `;
 }
