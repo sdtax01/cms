@@ -653,7 +653,10 @@ let state = {
     company: null,
     showUserModal: false,
     viewInvoiceId: null,
-    dashboardFilter: { periodType: 'monthly', fy: null },
+    dashboardFilter: { from: null, to: null },
+    purchaseFilter: { from: null, to: null },
+    salesFilter: { from: null, to: null },
+    invoiceFilter: { from: null, to: null },
     bankingSubTab: 'receipts',
     editingSalesId: null,
     editingPurchaseId: null,
@@ -766,6 +769,21 @@ function defaultDashboardFY() {
     return Math.max(DASHBOARD_MIN_FY_START, today);
 }
 
+// Default dashboard date range: 1 April of the current financial year through today.
+function defaultDashboardRange() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const fyStart = defaultDashboardFY();
+    return { from: `${fyStart}-04-01`, to: todayStr };
+}
+
+// Filter a transaction list to a { from, to } date range. Blank/unset from or to means
+// no lower/upper bound on that side, so an empty filter (the default) returns the list
+// untouched — existing pages keep showing everything until a range is chosen.
+function filterByDateRange(list, filter) {
+    if (!filter || (!filter.from && !filter.to)) return list;
+    return list.filter(t => (!filter.from || t.date >= filter.from) && (!filter.to || t.date <= filter.to));
+}
+
 // Sum a transaction field across a date-key predicate for a given type.
 function sumTransactions(type, matchFn) {
     return state.transactions
@@ -875,8 +893,8 @@ function amountToWords(num) {
 
 // Initialize App
 async function initApp() {
-    if (!state.dashboardFilter || !state.dashboardFilter.fy) {
-        state.dashboardFilter = { periodType: 'monthly', fy: defaultDashboardFY() };
+    if (!state.dashboardFilter || !state.dashboardFilter.from || !state.dashboardFilter.to) {
+        state.dashboardFilter = defaultDashboardRange();
     }
     const { data: { session } } = await sb.auth.getSession();
     if (session && session.user) {
@@ -999,19 +1017,37 @@ function exportData(data, filename) {
         alert('No data to export');
         return;
     }
-    
-    const headers = Object.keys(data[0]);
-    const csv = [headers.join(','), ...data.map(row => headers.map(h => {
-        const val = row[h] || '';
-        return typeof val === 'string' && val.includes(',') ? `"${val}"` : val;
-    }).join(','))].join('\n');
-    
-    const blob = new Blob([csv], { type: 'text/csv' });
+
+    // Collect headers from every row (not just the first) so a field that's missing
+    // or blank on the first record doesn't get silently dropped from the export.
+    const headers = Array.from(data.reduce((set, row) => {
+        Object.keys(row).forEach(k => set.add(k));
+        return set;
+    }, new Set()));
+
+    function csvCell(val) {
+        if (val === null || val === undefined) return '';
+        const str = String(val);
+        // Quote (and escape inner quotes) whenever the value could otherwise break the CSV.
+        return /[",\n]/.test(str) ? '"' + str.replace(/"/g, '""') + '"' : str;
+    }
+
+    const csv = [headers.join(','), ...data.map(row => headers.map(h => csvCell(row[h])).join(','))].join('\r\n');
+
+    // Prefix a UTF-8 BOM so Excel opens the file with correct encoding (₹ symbol etc.)
+    // instead of misreading it, and route the download through a link appended to the
+    // document — some browsers (e.g. Firefox) silently ignore a.click() on a detached
+    // element, which is why exports could appear to do nothing.
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename + '_' + Date.now() + '.csv';
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 }
 
 // Remove User
@@ -1150,7 +1186,6 @@ function renderDashboardPage() {
     const outputGst = sales.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
     const itc = purchases.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
     const netGstPayable = round2(outputGst - itc);
-    const recent = state.transactions.slice(-5).reverse();
     
     return `
         <h2 class="page-title">Dashboard</h2>
@@ -1187,68 +1222,128 @@ function renderDashboardPage() {
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <h3 style="font-size: 16px;">Sales vs Purchases Trend</h3>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <select id="dash_period_type" class="select-dropdown" style="width: auto;" onchange="updateDashboardFilter()">
-                        <option value="monthly" ${state.dashboardFilter.periodType === 'monthly' ? 'selected' : ''}>Monthly (Apr-Mar)</option>
-                        <option value="quarterly" ${state.dashboardFilter.periodType === 'quarterly' ? 'selected' : ''}>Quarterly</option>
-                        <option value="yearly" ${state.dashboardFilter.periodType === 'yearly' ? 'selected' : ''}>Yearly</option>
-                    </select>
-                    <select id="dash_period_fy" class="select-dropdown" style="width: auto; ${state.dashboardFilter.periodType === 'yearly' ? 'display: none;' : ''}" onchange="updateDashboardFilter()">
-                        ${getAvailableFYs().map(y => `<option value="${y}" ${y === state.dashboardFilter.fy ? 'selected' : ''}>${getFYLabel(y)}</option>`).join('')}
-                    </select>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <label style="font-size: 12px; color: #64748b;">From
+                        <input type="date" id="dash_range_from" class="select-dropdown" style="width: auto;" value="${state.dashboardFilter.from}" max="${state.dashboardFilter.to}" onchange="updateDashboardFilter()">
+                    </label>
+                    <label style="font-size: 12px; color: #64748b;">To
+                        <input type="date" id="dash_range_to" class="select-dropdown" style="width: auto;" value="${state.dashboardFilter.to}" min="${state.dashboardFilter.from}" onchange="updateDashboardFilter()">
+                    </label>
                 </div>
             </div>
             <div class="chart-box" style="height: 360px;">${renderTrendChartSVG(getTrendData(state.dashboardFilter))}</div>
         </div>
         
         <div class="ageing-grid">
-            ${renderAgeingCard('purchase')}
-            ${renderAgeingCard('sales')}
+            ${renderAgeingCard('purchase', state.dashboardFilter)}
+            ${renderAgeingCard('sales', state.dashboardFilter)}
         </div>
 
         <div class="card">
-            <h3 style="margin-bottom: 16px; font-size: 18px;">Recent Transactions</h3>
-            ${recent.length === 0 ? '<p style="color: #64748b;">No transactions yet</p>' : `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Reference</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${recent.map(t => `
-                            <tr>
-                                <td>${t.date}</td>
-                                <td><span class="badge ${t.type === 'purchase' ? 'badge-orange' : 'badge-green'}">${t.type === 'purchase' ? 'Purchase' : 'Sales'}</span></td>
-                                <td>${t.reference || t.invoiceNo || '-'}</td>
-                                <td style="text-align: right;">₹${parseFloat(t.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `}
+            <h3 style="margin-bottom: 4px; font-size: 16px;">Revenue vs Expenses</h3>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;">Basic (taxable) value by entry description — Sales entries = Revenue, Purchase entries = Expense head</p>
+            <div class="chart-box" style="height: 340px;">${renderRevenueExpensePieSVG(getRevenueExpenseData(state.dashboardFilter))}</div>
         </div>
+
     `;
 }
 
-// Handle the dashboard's period-type / financial-year filter controls.
-function updateDashboardFilter() {
-    const typeEl = document.getElementById('dash_period_type');
-    const fyEl = document.getElementById('dash_period_fy');
-    const type = typeEl ? typeEl.value : state.dashboardFilter.periodType;
-    const fy = fyEl ? parseInt(fyEl.value, 10) : state.dashboardFilter.fy;
-    state.dashboardFilter = { periodType: type, fy: fy || defaultDashboardFY() };
+// Purchase / Sales / Invoices tab date-range filters — same shape as the dashboard's,
+// but independent per tab and blank by default so existing behavior (show everything)
+// is unchanged until the user picks a range.
+function updatePurchaseFilter() {
+    const from = document.getElementById('purchase_range_from').value || null;
+    const to = document.getElementById('purchase_range_to').value || null;
+    state.purchaseFilter = { from, to };
+    renderApp();
+}
+function clearPurchaseFilter() {
+    state.purchaseFilter = { from: null, to: null };
+    renderApp();
+}
+function updateSalesFilter() {
+    const from = document.getElementById('sales_range_from').value || null;
+    const to = document.getElementById('sales_range_to').value || null;
+    state.salesFilter = { from, to };
+    renderApp();
+}
+function clearSalesFilter() {
+    state.salesFilter = { from: null, to: null };
+    renderApp();
+}
+function updateInvoiceFilter() {
+    const from = document.getElementById('invoice_range_from').value || null;
+    const to = document.getElementById('invoice_range_to').value || null;
+    state.invoiceFilter = { from, to };
+    renderApp();
+}
+function clearInvoiceFilter() {
+    state.invoiceFilter = { from: null, to: null };
     renderApp();
 }
 
+// Handle the dashboard's date-range filter controls (From / To), which drive the
+// Sales vs Purchases trend chart and the Payable/Receivable ageing reports below it.
+function updateDashboardFilter() {
+    const fromEl = document.getElementById('dash_range_from');
+    const toEl = document.getElementById('dash_range_to');
+    let from = fromEl ? fromEl.value : state.dashboardFilter.from;
+    let to = toEl ? toEl.value : state.dashboardFilter.to;
+    if (!from || !to) {
+        const def = defaultDashboardRange();
+        from = from || def.from;
+        to = to || def.to;
+    }
+    if (from > to) { const t = from; from = to; to = t; } // keep range valid regardless of input order
+    state.dashboardFilter = { from, to };
+    renderApp();
+}
+
+// Build labeled Sales/Purchase totals for an arbitrary [from, to] date range, choosing
+// a sensible bucket size automatically so the chart stays readable at any span:
+// daily for short ranges, monthly for medium ranges, yearly for long ones.
 function getTrendData(filter) {
-    filter = filter || { periodType: 'monthly', fy: defaultDashboardFY() };
-    if (filter.periodType === 'quarterly') return getQuarterlyTrendData(filter.fy);
-    if (filter.periodType === 'yearly') return getYearlyTrendData();
-    return getMonthlyTrendData(filter.fy);
+    filter = (filter && filter.from && filter.to) ? filter : defaultDashboardRange();
+    const from = new Date(filter.from), to = new Date(filter.to);
+    const spanDays = Math.max(0, Math.round((to - from) / 86400000));
+
+    const inRange = d => d && d >= filter.from && d <= filter.to;
+
+    if (spanDays <= 62) {
+        // Daily buckets
+        const labels = [], salesData = [], purchaseData = [];
+        for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+            const key = d.toISOString().split('T')[0];
+            labels.push(d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }));
+            salesData.push(round2(sumTransactions('sales', dt => dt === key)));
+            purchaseData.push(round2(sumTransactions('purchase', dt => dt === key)));
+        }
+        return { labels, salesData, purchaseData };
+    }
+
+    if (spanDays <= 400) {
+        // Monthly buckets
+        const labels = [], salesData = [], purchaseData = [];
+        const cursor = new Date(from.getFullYear(), from.getMonth(), 1);
+        while (cursor <= to) {
+            const year = cursor.getFullYear(), month = cursor.getMonth() + 1;
+            const key = `${year}-${String(month).padStart(2, '0')}`;
+            labels.push(cursor.toLocaleString('en-IN', { month: 'short' }) + " '" + String(year).slice(-2));
+            salesData.push(round2(sumTransactions('sales', dt => inRange(dt) && dt.slice(0, 7) === key)));
+            purchaseData.push(round2(sumTransactions('purchase', dt => inRange(dt) && dt.slice(0, 7) === key)));
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+        return { labels, salesData, purchaseData };
+    }
+
+    // Yearly buckets (calendar year, for arbitrary/long ranges)
+    const labels = [], salesData = [], purchaseData = [];
+    for (let y = from.getFullYear(); y <= to.getFullYear(); y++) {
+        labels.push(String(y));
+        salesData.push(round2(sumTransactions('sales', dt => inRange(dt) && dt.slice(0, 4) === String(y))));
+        purchaseData.push(round2(sumTransactions('purchase', dt => inRange(dt) && dt.slice(0, 4) === String(y))));
+    }
+    return { labels, salesData, purchaseData };
 }
 
 // Round a value up to a visually clean axis maximum (1/2/5 x 10^n).
@@ -1340,12 +1435,13 @@ const AGEING_BUCKETS = [
     { label: '90+ days', min: 91, max: Infinity, color: '#dc2626' }
 ];
 
-function getAgeingData(type) {
+function getAgeingData(type, filter) {
+    filter = (filter && filter.from && filter.to) ? filter : defaultDashboardRange();
     const isPurchase = type === 'purchase';
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const buckets = AGEING_BUCKETS.map(b => ({ ...b, amount: 0, count: 0 }));
     let total = 0, settled = 0, outstanding = 0;
-    state.transactions.filter(t => t.type === type).forEach(t => {
+    state.transactions.filter(t => t.type === type && t.date >= filter.from && t.date <= filter.to).forEach(t => {
         const amt = parseFloat(t.amount) || 0;
         const done = isPurchase ? invoicePaidAmount(t.id) : invoiceReceivedAmount(t.id);
         const due = round2(amt - done);
@@ -1390,9 +1486,9 @@ function renderAgeingChartSVG(data) {
     return `<svg viewBox="0 0 ${width} ${height}" style="width:100%; height:100%;" preserveAspectRatio="xMidYMid meet">${svg}</svg>`;
 }
 
-function renderAgeingCard(type) {
+function renderAgeingCard(type, filter) {
     const isPurchase = type === 'purchase';
-    const d = getAgeingData(type);
+    const d = getAgeingData(type, filter);
     const fmt = v => '₹' + v.toLocaleString('en-IN', { maximumFractionDigits: 0 });
     const title = isPurchase ? 'Payable Report with Ageing' : 'Receivable Report with Ageing';
     const l1 = isPurchase ? 'Purchases' : 'Sales';
@@ -1409,6 +1505,79 @@ function renderAgeingCard(type) {
                 <div style="flex: 1; min-width: 110px;"><div style="font-size: 12px; color: #64748b;">${l3}</div><div style="font-size: 18px; font-weight: 700; color: #dc2626;">${fmt(d.outstanding)}</div></div>
             </div>
             <div class="chart-box" style="height: 280px;">${renderAgeingChartSVG(d)}</div>
+        </div>
+    `;
+}
+
+// --- Revenue vs Expenses pie chart: Sales entries (basic/taxable value) grouped by their
+// description as "revenue heads", Purchase entries (basic/taxable value) grouped by their
+// description as "expense heads". Respects the dashboard date-range filter.
+const PIE_REVENUE_COLORS = ['#16a34a', '#22c55e', '#4ade80', '#86efac', '#15803d', '#065f46'];
+const PIE_EXPENSE_COLORS = ['#dc2626', '#ea580c', '#f97316', '#fb923c', '#b91c1c', '#991b1b'];
+
+function getRevenueExpenseData(filter) {
+    filter = (filter && filter.from && filter.to) ? filter : defaultDashboardRange();
+    function grouped(type) {
+        const groups = {};
+        state.transactions
+            .filter(t => t.type === type && t.date >= filter.from && t.date <= filter.to)
+            .forEach(t => {
+                const head = (t.description && t.description.trim()) || (type === 'purchase' ? 'Uncategorized Expense' : 'Uncategorized Revenue');
+                const basic = parseFloat(t.taxableValue != null ? t.taxableValue : t.amount) || 0;
+                groups[head] = round2((groups[head] || 0) + basic);
+            });
+        return Object.keys(groups).map(name => ({ name, value: groups[name] })).sort((a, b) => b.value - a.value);
+    }
+    const revenue = grouped('sales');
+    const expense = grouped('purchase');
+    const totalRevenue = round2(revenue.reduce((s, g) => s + g.value, 0));
+    const totalExpense = round2(expense.reduce((s, g) => s + g.value, 0));
+    return { revenue, expense, totalRevenue, totalExpense };
+}
+
+function renderRevenueExpensePieSVG(data) {
+    const slices = [
+        ...data.revenue.map((g, i) => ({ ...g, kind: 'Revenue', color: PIE_REVENUE_COLORS[i % PIE_REVENUE_COLORS.length] })),
+        ...data.expense.map((g, i) => ({ ...g, kind: 'Expense', color: PIE_EXPENSE_COLORS[i % PIE_EXPENSE_COLORS.length] }))
+    ].filter(s => s.value > 0);
+
+    const grandTotal = round2(slices.reduce((s, x) => s + x.value, 0));
+    if (grandTotal <= 0) {
+        return `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#94a3b8; font-size:14px;">No sales or purchase entries for this period yet</div>`;
+    }
+
+    const cx = 150, cy = 150, r = 120;
+    let angle = -Math.PI / 2;
+    let pathsSvg = '';
+    slices.forEach(s => {
+        const frac = s.value / grandTotal;
+        const nextAngle = angle + frac * 2 * Math.PI;
+        const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+        const x2 = cx + r * Math.cos(nextAngle), y2 = cy + r * Math.sin(nextAngle);
+        const largeArc = (nextAngle - angle) > Math.PI ? 1 : 0;
+        const pct = (frac * 100).toFixed(1);
+        if (frac >= 0.999) {
+            pathsSvg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${s.color}"><title>${s.kind}: ${s.name} — ₹${s.value.toLocaleString('en-IN')} (${pct}%)</title></circle>`;
+        } else {
+            pathsSvg += `<path d="M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z" fill="${s.color}" stroke="#fff" stroke-width="1.5"><title>${s.kind}: ${s.name} — ₹${s.value.toLocaleString('en-IN')} (${pct}%)</title></path>`;
+        }
+        angle = nextAngle;
+    });
+
+    const legendSvg = slices.map(s => `
+        <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:#334155;">
+            <span style="width:10px; height:10px; border-radius:2px; background:${s.color}; display:inline-block; flex-shrink:0;"></span>
+            <span>${s.kind === 'Revenue' ? '▲' : '▼'} ${s.name} — ₹${formatCompactINR(s.value)}</span>
+        </div>`).join('');
+
+    return `
+        <div style="display:flex; gap:20px; align-items:center; height:100%; flex-wrap:wrap; justify-content:center;">
+            <svg viewBox="0 0 300 300" style="width: 280px; height: 280px; flex-shrink: 0;">${pathsSvg}</svg>
+            <div style="display:flex; flex-direction:column; gap:6px; max-height: 280px; overflow-y:auto; min-width: 200px;">
+                <div style="font-size:13px; font-weight:700; color:#16a34a; margin-bottom:2px;">Revenue Total: ₹${data.totalRevenue.toLocaleString('en-IN')}</div>
+                <div style="font-size:13px; font-weight:700; color:#dc2626; margin-bottom:6px;">Expense Total: ₹${data.totalExpense.toLocaleString('en-IN')}</div>
+                ${legendSvg}
+            </div>
         </div>
     `;
 }
@@ -1726,7 +1895,7 @@ function importVendors(event) {
 }
 
 function renderPurchasePage() {
-    const purchases = state.transactions.filter(t => t.type === 'purchase');
+    const purchases = filterByDateRange(state.transactions.filter(t => t.type === 'purchase'), state.purchaseFilter);
     const total = purchases.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const totalGst = purchases.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
     
@@ -1737,6 +1906,17 @@ function renderPurchasePage() {
             <button class="btn btn-primary" onclick="exportData(purchases, 'purchases')">Export Excel</button>
             <button class="btn btn-secondary" onclick="showPurchaseForm()">+ New Entry</button>
             <input type="file" id="purchase_file" style="display: none;" accept=".csv,.xlsx" onchange="importPurchases(event)">
+        </div>
+
+        <div class="card" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 16px;">
+            <span style="font-size: 12px; color: #64748b; font-weight: 600;">Filter by date:</span>
+            <label style="font-size: 12px; color: #64748b;">From
+                <input type="date" id="purchase_range_from" class="select-dropdown" style="width: auto;" value="${state.purchaseFilter.from || ''}" onchange="updatePurchaseFilter()">
+            </label>
+            <label style="font-size: 12px; color: #64748b;">To
+                <input type="date" id="purchase_range_to" class="select-dropdown" style="width: auto;" value="${state.purchaseFilter.to || ''}" onchange="updatePurchaseFilter()">
+            </label>
+            ${(state.purchaseFilter.from || state.purchaseFilter.to) ? '<button class="btn" style="padding: 6px 12px; font-size: 12px; background-color: #e2e8f0; color: #475569;" onclick="clearPurchaseFilter()">Clear</button>' : ''}
         </div>
         
         <div id="purchase-form" style="display: none;">
@@ -1986,7 +2166,7 @@ function importPurchases(event) {
 }
 
 function renderSalesPage() {
-    const sales = state.transactions.filter(t => t.type === 'sales');
+    const sales = filterByDateRange(state.transactions.filter(t => t.type === 'sales'), state.salesFilter);
     const total = sales.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
     const totalGst = sales.reduce((sum, t) => sum + (parseFloat(t.gstAmount) || 0), 0);
     
@@ -1997,6 +2177,17 @@ function renderSalesPage() {
             <button class="btn btn-primary" onclick="exportData(sales, 'sales')">Export Excel</button>
             <button class="btn btn-secondary" onclick="showSalesForm()">+ New Entry</button>
             <input type="file" id="sales_file" style="display: none;" accept=".csv,.xlsx" onchange="importSales(event)">
+        </div>
+
+        <div class="card" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 16px;">
+            <span style="font-size: 12px; color: #64748b; font-weight: 600;">Filter by date:</span>
+            <label style="font-size: 12px; color: #64748b;">From
+                <input type="date" id="sales_range_from" class="select-dropdown" style="width: auto;" value="${state.salesFilter.from || ''}" onchange="updateSalesFilter()">
+            </label>
+            <label style="font-size: 12px; color: #64748b;">To
+                <input type="date" id="sales_range_to" class="select-dropdown" style="width: auto;" value="${state.salesFilter.to || ''}" onchange="updateSalesFilter()">
+            </label>
+            ${(state.salesFilter.from || state.salesFilter.to) ? '<button class="btn" style="padding: 6px 12px; font-size: 12px; background-color: #e2e8f0; color: #475569;" onclick="clearSalesFilter()">Clear</button>' : ''}
         </div>
         
         <div id="sales-form" style="display: none;">
@@ -2845,7 +3036,7 @@ async function submitPaymentForm() {
 // ---- Invoice Generation (linked to Sales) ----
 
 function renderInvoicesPage() {
-    const sales = state.transactions.filter(t => t.type === 'sales').slice().reverse();
+    const sales = filterByDateRange(state.transactions.filter(t => t.type === 'sales'), state.invoiceFilter).slice().reverse();
     const c = state.company;
     
     return `
@@ -2857,6 +3048,17 @@ function renderInvoicesPage() {
                 ${!c.gstin ? '<span style="color:#991b1b;"> — add GSTIN/address/logo in Settings for legally compliant invoices.</span>' : ''}
                 ${state.currentUser.role === 'admin' ? ' <a href="#" onclick="goToPage(\'settings\'); return false;" style="color:#2563eb;">Edit in Settings →</a>' : ''}
             </div>
+        </div>
+
+        <div class="card" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px 16px;">
+            <span style="font-size: 12px; color: #64748b; font-weight: 600;">Filter by date:</span>
+            <label style="font-size: 12px; color: #64748b;">From
+                <input type="date" id="invoice_range_from" class="select-dropdown" style="width: auto;" value="${state.invoiceFilter.from || ''}" onchange="updateInvoiceFilter()">
+            </label>
+            <label style="font-size: 12px; color: #64748b;">To
+                <input type="date" id="invoice_range_to" class="select-dropdown" style="width: auto;" value="${state.invoiceFilter.to || ''}" onchange="updateInvoiceFilter()">
+            </label>
+            ${(state.invoiceFilter.from || state.invoiceFilter.to) ? '<button class="btn" style="padding: 6px 12px; font-size: 12px; background-color: #e2e8f0; color: #475569;" onclick="clearInvoiceFilter()">Clear</button>' : ''}
         </div>
         
         <div class="card">
